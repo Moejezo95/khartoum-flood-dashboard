@@ -41,7 +41,7 @@ url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
 # url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
 buildings_df = pd.read_csv(url) 
 st.subheader("📍 Sample Data")
-st.dataframe(building_df.head())
+st.dataframe(buildings_df.head())
 # buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
 # buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
 # # # --- Clip buildings to Khartoum ---
