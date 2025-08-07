@@ -29,56 +29,81 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import os
 
+st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
+
 # --- Load Khartoum boundary ---
-sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
-khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
+try:
+    sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
+    khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
+except Exception as e:
+    st.error(f"❌ Error loading Khartoum shapefile: {e}")
+    st.stop()
 
-# --- Load buildings CSV and convert WKT to GeoDataFrame ---
-# buildings_df = pd.read_csv("/content/drive/My Drive/GIS_FTL_LAST/169_buildings.csv")
-# buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-# buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-# https://drive.google.com/file/d/1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa/view?usp=drive_link
-# url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
-url = "https://drive.google.com/uc?id=1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
-# https://drive.google.com/file/d/1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU/view?usp=sharing
-buildings_df = pd.read_csv(url) 
-# file_id = "1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
-# gdown.download(f"https://drive.google.com/uc?id={file_id}", "buildings1.csv", quiet=False)
-# buildings_df = pd.read_csv("buildings1.csv")
-st.subheader("📍 Sample Data")
-st.dataframe(buildings_df.head())
-buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-# # --- Clip buildings to Khartoum ---
-buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
+# --- Load buildings CSV ---
+try:
+    buildings_df = pd.read_csv("data/buildings.csv")
+    st.subheader("📍 Sample Building Data")
+    st.dataframe(buildings_df.head())
+except Exception as e:
+    st.error(f"❌ Error loading buildings CSV: {e}")
+    st.stop()
 
-# --- Efficient zonal stats function with chunking ---
+# --- Parse WKT geometry ---
+if 'geometry' in buildings_df.columns:
+    try:
+        buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+        buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
+    except Exception as e:
+        st.error(f"❌ Error parsing WKT geometries: {e}")
+        st.stop()
+else:
+    st.error("❌ 'geometry' column not found in buildings CSV.")
+    st.stop()
+
+# --- Clip buildings to Khartoum ---
+try:
+    buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
+except Exception as e:
+    st.error(f"❌ Error clipping buildings to Khartoum: {e}")
+    st.stop()
+
+# --- Efficient zonal stats function ---
 def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
     flooded_chunks = []
     buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
     for i in range(0, len(buildings_gdf), chunk_size):
         chunk = buildings_gdf.iloc[i:i+chunk_size]
-        stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
-        flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
-        flooded_chunks.append(chunk.iloc[flooded_idx])
-    return pd.concat(flooded_chunks).to_crs("EPSG:4326")
+        try:
+            stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
+            flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
+            flooded_chunks.append(chunk.iloc[flooded_idx])
+        except Exception as e:
+            st.warning(f"⚠️ Zonal stats failed for chunk {i}: {e}")
+    return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
 
-# --- Load flood masks and compute affected buildings ---
+# --- Load flood masks ---
 flood_files = {
     2018: "data/FloodMask_2018.tif",
     2019: "data/FloodMask_2019.tif",
-    2020: "data/FloodMask_2020.tif",
-    # 2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
-    # 2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
+    2020: "data/FloodMask_2020.tif"
 }
 
 flooded_by_year = {}
 for year, path in flood_files.items():
     if os.path.exists(path):
-        flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
+        try:
+            flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
+        except Exception as e:
+            st.warning(f"⚠️ Error processing flood mask for {year}: {e}")
+    else:
+        st.warning(f"📁 Flood mask not found for {year}: {path}")
+
+if not flooded_by_year:
+    st.warning("⚠️ No flood data available.")
+    st.stop()
 
 # --- Streamlit UI ---
-st.title("🌊 Flood Impact on Buildings in Khartoum (2017–2022)")
+st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
 year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
 flooded = flooded_by_year[year]
 
