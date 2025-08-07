@@ -27,6 +27,7 @@ from rasterstats import zonal_stats
 from shapely import wkt
 import matplotlib.pyplot as plt
 import streamlit as st
+import gdown
 import os
 
 # --- Load Khartoum boundary ---
@@ -38,9 +39,12 @@ khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
 # buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
 # buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
 # https://drive.google.com/file/d/1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa/view?usp=drive_link
-url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
 # url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
-buildings_df = pd.read_csv(url) 
+# url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
+# buildings_df = pd.read_csv(url) 
+file_id = "1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
+gdown.download(f"https://drive.google.com/uc?id={file_id}", "169_buildings.csv", quiet=False)
+buildings_df = pd.read_csv("169_buildings.csv")
 st.subheader("📍 Sample Data")
 st.dataframe(buildings_df.head())
 # buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
