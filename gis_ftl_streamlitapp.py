@@ -144,16 +144,24 @@ except Exception as e:
     st.error(f"❌ Error clipping buildings to Khartoum: {e}")
     st.stop()
 
-# --- Efficient zonal stats function with chunking ---
+# --- Zonal stats with CRS alignment and debug logging ---
 def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
     flooded_chunks = []
-    buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
-    for i in range(0, len(buildings_gdf), chunk_size):
-        chunk = buildings_gdf.iloc[i:i+chunk_size]
-        stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
-        flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
-        flooded_chunks.append(chunk.iloc[flooded_idx])
-    return pd.concat(flooded_chunks).to_crs("EPSG:4326")
+    try:
+        with rasterio.open(flood_path) as src:
+            raster_crs = src.crs
+            buildings_gdf = buildings_gdf.to_crs(raster_crs)
+            for i in range(0, len(buildings_gdf), chunk_size):
+                chunk = buildings_gdf.iloc[i:i+chunk_size]
+                stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
+                if not stats:
+                    st.warning(f"⚠️ No stats returned for chunk {i}-{i+chunk_size}")
+                flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
+                flooded_chunks.append(chunk.iloc[flooded_idx])
+    except Exception as e:
+        st.error(f"❌ Error in zonal stats: {e}")
+        return gpd.GeoDataFrame(columns=buildings_gdf.columns)
+    return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
 
 # --- Load flood masks and compute affected buildings ---
 flood_files = {
@@ -165,10 +173,7 @@ flood_files = {
 flooded_by_year = {}
 for year, path in flood_files.items():
     if os.path.exists(path):
-        try:
-            flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
-        except Exception as e:
-            st.warning(f"⚠️ Error processing flood mask for {year}: {e}")
+        flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
     else:
         st.warning(f"📁 Flood mask not found for {year}: {path}")
 
