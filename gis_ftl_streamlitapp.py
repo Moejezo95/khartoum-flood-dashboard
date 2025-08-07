@@ -7,8 +7,8 @@ Original file is located at
     https://colab.research.google.com/drive/1eTBl5EMKGm7xUVFf9_pF95wgJnKbmf2X
 """
 
-from google.colab import drive
-drive.mount('/content/drive')
+# from google.colab import drive
+# drive.mount('/content/drive')
 
 # !pip install geopandas
 # !pip install pandas
