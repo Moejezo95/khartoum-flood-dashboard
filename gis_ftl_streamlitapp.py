@@ -40,8 +40,10 @@ khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
 # url = "https://drive.google.com/file/d/1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa/view?usp=drive_link"
 url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
 buildings_df = pd.read_csv(url)
+buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
 # # --- Clip buildings to Khartoum ---
-# buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
+buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
 
 # --- Efficient zonal stats function with chunking ---
 def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
