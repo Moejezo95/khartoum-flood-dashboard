@@ -10,14 +10,14 @@ Original file is located at
 from google.colab import drive
 drive.mount('/content/drive')
 
-!pip install geopandas
-!pip install pandas
-!pip install pandas
-!pip install shapely
-!pip install matplotlib
-!pip install  rasterio
-!pip install streamlit
-!pip install rasterstats
+# !pip install geopandas
+# !pip install pandas
+# !pip install pandas
+# !pip install shapely
+# !pip install matplotlib
+# !pip install  rasterio
+# !pip install streamlit
+# !pip install rasterstats
 
 # --- Imports ---
 import geopandas as gpd
