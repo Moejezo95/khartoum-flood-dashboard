@@ -30,16 +30,18 @@ import streamlit as st
 import os
 
 # --- Load Khartoum boundary ---
-sudan_gdf = gpd.read_file("/content/drive/My Drive/GIS_FTL_LAST/sd.shp").to_crs("EPSG:4326")
+sudan_gdf = gpd.read_file("Khartoum.shp").to_crs("EPSG:4326")
 khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
 
 # --- Load buildings CSV and convert WKT to GeoDataFrame ---
-buildings_df = pd.read_csv("/content/drive/My Drive/GIS_FTL_LAST/169_buildings.csv")
-buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-
-# --- Clip buildings to Khartoum ---
-buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
+# buildings_df = pd.read_csv("/content/drive/My Drive/GIS_FTL_LAST/169_buildings.csv")
+# buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+# buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
+# url = "https://drive.google.com/file/d/1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa/view?usp=drive_link"
+url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
+buildings_df = pd.read_csv(url)
+# # --- Clip buildings to Khartoum ---
+# buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
 
 # --- Efficient zonal stats function with chunking ---
 def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
@@ -54,12 +56,12 @@ def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
 
 # --- Load flood masks and compute affected buildings ---
 flood_files = {
-    2017: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2017.tif",
+    # 2017: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2017.tif",
     2018: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2018.tif",
     2019: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2019.tif",
     2020: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2020.tif",
-    2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
-    2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
+    # 2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
+    # 2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
 }
 
 flooded_by_year = {}
