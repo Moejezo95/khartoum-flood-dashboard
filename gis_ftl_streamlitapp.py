@@ -27,7 +27,6 @@ from rasterstats import zonal_stats
 from shapely import wkt
 import matplotlib.pyplot as plt
 import streamlit as st
-# import gdown
 import os
 
 # --- Load Khartoum boundary ---
