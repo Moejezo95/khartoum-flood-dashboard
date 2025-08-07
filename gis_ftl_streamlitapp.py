@@ -98,6 +98,7 @@
 #     file_name=f"flooded_buildings_{year}.csv",
 #     mime="text/csv"
 # )
+
 import geopandas as gpd
 import pandas as pd
 import rasterio
@@ -106,6 +107,7 @@ from shapely import wkt
 import matplotlib.pyplot as plt
 import streamlit as st
 import os
+from rasterio.plot import show
 
 # --- Load Khartoum boundary ---
 try:
@@ -188,9 +190,19 @@ if flooded_by_year:
         st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
 
         fig, ax = plt.subplots(figsize=(10, 8))
+
+        # Plot flood raster in blue
+        try:
+            with rasterio.open(flood_files[year]) as src:
+                show(src, ax=ax, cmap='Blues', alpha=0.5)
+        except Exception as e:
+            st.warning(f"⚠️ Could not display flood raster: {e}")
+
+        # Plot vector layers
         khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
         buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
         flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+
         ax.legend()
         st.pyplot(fig)
 
