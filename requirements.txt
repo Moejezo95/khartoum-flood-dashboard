@@ -5,5 +5,3 @@ rasterio
 rasterstats
 shapely
 matplotlib
-
-
