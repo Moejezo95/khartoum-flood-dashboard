@@ -47,54 +47,54 @@ buildings_df = pd.read_csv(url)
 # buildings_df = pd.read_csv("buildings1.csv")
 st.subheader("📍 Sample Data")
 st.dataframe(buildings_df.head())
-# buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-# buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-# # # --- Clip buildings to Khartoum ---
-# buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
+buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
+# # --- Clip buildings to Khartoum ---
+buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
 
-# # --- Efficient zonal stats function with chunking ---
-# def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
-#     flooded_chunks = []
-#     buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
-#     for i in range(0, len(buildings_gdf), chunk_size):
-#         chunk = buildings_gdf.iloc[i:i+chunk_size]
-#         stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
-#         flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
-#         flooded_chunks.append(chunk.iloc[flooded_idx])
-#     return pd.concat(flooded_chunks).to_crs("EPSG:4326")
+# --- Efficient zonal stats function with chunking ---
+def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
+    flooded_chunks = []
+    buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
+    for i in range(0, len(buildings_gdf), chunk_size):
+        chunk = buildings_gdf.iloc[i:i+chunk_size]
+        stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
+        flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
+        flooded_chunks.append(chunk.iloc[flooded_idx])
+    return pd.concat(flooded_chunks).to_crs("EPSG:4326")
 
-# # --- Load flood masks and compute affected buildings ---
-# flood_files = {
-#     2018: "FloodMask_2018.tif",
-#     2019: "FloodMask_2019.tif",
-#     2020: "FloodMask_2020.tif",
-#     # 2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
-#     # 2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
-# }
+# --- Load flood masks and compute affected buildings ---
+flood_files = {
+    2018: "FloodMask_2018.tif",
+    2019: "FloodMask_2019.tif",
+    2020: "FloodMask_2020.tif",
+    # 2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
+    # 2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
+}
 
-# flooded_by_year = {}
-# for year, path in flood_files.items():
-#     if os.path.exists(path):
-#         flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
+flooded_by_year = {}
+for year, path in flood_files.items():
+    if os.path.exists(path):
+        flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
 
-# # --- Streamlit UI ---
-# st.title("🌊 Flood Impact on Buildings in Khartoum (2017–2022)")
-# year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
-# flooded = flooded_by_year[year]
+# --- Streamlit UI ---
+st.title("🌊 Flood Impact on Buildings in Khartoum (2017–2022)")
+year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
+flooded = flooded_by_year[year]
 
-# st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
+st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
 
-# fig, ax = plt.subplots(figsize=(10, 8))
-# khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
-# buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
-# flooded.plot(ax=ax, color='red', label='Flooded Buildings')
-# ax.legend()
-# st.pyplot(fig)
+fig, ax = plt.subplots(figsize=(10, 8))
+khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
+buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
+flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+ax.legend()
+st.pyplot(fig)
 
-# # --- Optional download ---
-# st.download_button(
-#     label=f"Download Flooded Buildings ({year})",
-#     data=flooded.to_csv(index=False),
-#     file_name=f"flooded_buildings_{year}.csv",
-#     mime="text/csv"
-# )
+# --- Optional download ---
+st.download_button(
+    label=f"Download Flooded Buildings ({year})",
+    data=flooded.to_csv(index=False),
+    file_name=f"flooded_buildings_{year}.csv",
+    mime="text/csv"
+)
