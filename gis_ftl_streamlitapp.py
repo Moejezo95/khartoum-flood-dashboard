@@ -44,8 +44,8 @@ khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
 # https://drive.google.com/file/d/1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU/view?usp=sharing
 # buildings_df = pd.read_csv(url) 
 file_id = "1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
-gdown.download(f"https://drive.google.com/uc?id={file_id}", "169_buildings.csv", quiet=False)
-buildings_df = pd.read_csv("169_buildings.csv")
+gdown.download(f"https://drive.google.com/uc?id={file_id}", "buildings1.csv", quiet=False)
+buildings_df = pd.read_csv("buildings1.csv")
 st.subheader("📍 Sample Data")
 st.dataframe(buildings_df.head())
 # buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
