@@ -28,6 +28,7 @@ from shapely import wkt
 import matplotlib.pyplot as plt
 import streamlit as st
 import os
+import numpy as np
 
 st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
 
@@ -102,6 +103,17 @@ if not flooded_by_year:
     st.warning("⚠️ No flood data available.")
     st.stop()
 
+# --- Raster plotting helper ---
+def plot_flood_raster(ax, raster_path):
+    try:
+        with rasterio.open(raster_path) as src:
+            flood_data = src.read(1)
+            flood_data = np.ma.masked_where(flood_data == 0, flood_data)
+            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+            ax.imshow(flood_data, extent=extent, cmap='Blues', alpha=0.5)
+    except Exception as e:
+        st.warning(f"⚠️ Could not plot flood raster: {e}")
+
 # --- Streamlit UI ---
 st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
 year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
@@ -110,10 +122,10 @@ flooded = flooded_by_year[year]
 st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
 
 fig, ax = plt.subplots(figsize=(10, 8))
+plot_flood_raster(ax, flood_files[year])  # ✅ Show flood raster in blue
 khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
-buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
+buildings_in_khartoum.plot(ax=ax, color='lightgreen', alpha=0.4, label='All Buildings')
 
-# ✅ Check for valid geometries before plotting flooded buildings
 if not flooded.empty and flooded.geometry.notnull().all():
     flooded.plot(ax=ax, color='red', label='Flooded Buildings')
 else:
@@ -129,6 +141,7 @@ st.download_button(
     file_name=f"flooded_buildings_{year}.csv",
     mime="text/csv"
 )
+
 
 
 # import geopandas as gpd
