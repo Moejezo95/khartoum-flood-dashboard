@@ -112,7 +112,13 @@ st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
 fig, ax = plt.subplots(figsize=(10, 8))
 khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
 buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
-flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+
+# ✅ Check for valid geometries before plotting flooded buildings
+if not flooded.empty and flooded.geometry.notnull().all():
+    flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+else:
+    st.warning(f"⚠️ No flooded buildings to plot for {year}.")
+
 ax.legend()
 st.pyplot(fig)
 
@@ -123,6 +129,7 @@ st.download_button(
     file_name=f"flooded_buildings_{year}.csv",
     mime="text/csv"
 )
+
 
 # import geopandas as gpd
 # import pandas as pd
