@@ -40,12 +40,12 @@ khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
 # buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
 # https://drive.google.com/file/d/1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa/view?usp=drive_link
 # url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
-# url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
+url = "https://drive.google.com/uc?id=1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
 # https://drive.google.com/file/d/1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU/view?usp=sharing
-# buildings_df = pd.read_csv(url) 
-file_id = "1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
-gdown.download(f"https://drive.google.com/uc?id={file_id}", "buildings1.csv", quiet=False)
-buildings_df = pd.read_csv("buildings1.csv")
+buildings_df = pd.read_csv(url) 
+# file_id = "1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
+# gdown.download(f"https://drive.google.com/uc?id={file_id}", "buildings1.csv", quiet=False)
+# buildings_df = pd.read_csv("buildings1.csv")
 st.subheader("📍 Sample Data")
 st.dataframe(buildings_df.head())
 # buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
