@@ -111,7 +111,7 @@ from rasterio.plot import show
 
 # --- Load Khartoum boundary ---
 try:
-    sudan_gdf = gpd.read_file("Khartoum.shp").to_crs("EPSG:4326")
+    sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
     khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
 except Exception as e:
     st.error(f"❌ Error loading Khartoum shapefile: {e}")
@@ -167,9 +167,9 @@ def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
 
 # --- Load flood masks and compute affected buildings ---
 flood_files = {
-    2018: "FloodMask_2018.tif",
-    2019: "FloodMask_2019.tif",
-    2020: "FloodMask_2020.tif"
+    2018: "data/FloodMask_2018.tif",
+    2019: "data/FloodMask_2019.tif",
+    2020: "data/FloodMask_2020.tif"
 }
 
 flooded_by_year = {}
