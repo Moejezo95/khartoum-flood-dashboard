@@ -20,85 +20,6 @@
 # # !pip install rasterstats
 
 # # --- Imports ---
-# import geopandas as gpd
-# import pandas as pd
-# import rasterio
-# from rasterstats import zonal_stats
-# from shapely import wkt
-# import matplotlib.pyplot as plt
-# import streamlit as st
-# import os
-
-# # --- Load Khartoum boundary ---
-# sudan_gdf = gpd.read_file("Khartoum.shp").to_crs("EPSG:4326")
-# khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
-
-# # --- Load buildings CSV and convert WKT to GeoDataFrame ---
-# # buildings_df = pd.read_csv("/content/drive/My Drive/GIS_FTL_LAST/169_buildings.csv")
-# # buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-# # buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-# # https://drive.google.com/file/d/1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa/view?usp=drive_link
-# # url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
-# url = "https://drive.google.com/uc?id=1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
-# # https://drive.google.com/file/d/1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU/view?usp=sharing
-# buildings_df = pd.read_csv(url) 
-# # file_id = "1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
-# # gdown.download(f"https://drive.google.com/uc?id={file_id}", "buildings1.csv", quiet=False)
-# # buildings_df = pd.read_csv("buildings1.csv")
-# st.subheader("📍 Sample Data")
-# st.dataframe(buildings_df.head())
-# buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-# buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-# # # --- Clip buildings to Khartoum ---
-# buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
-
-# # --- Efficient zonal stats function with chunking ---
-# def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
-#     flooded_chunks = []
-#     buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
-#     for i in range(0, len(buildings_gdf), chunk_size):
-#         chunk = buildings_gdf.iloc[i:i+chunk_size]
-#         stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
-#         flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
-#         flooded_chunks.append(chunk.iloc[flooded_idx])
-#     return pd.concat(flooded_chunks).to_crs("EPSG:4326")
-
-# # --- Load flood masks and compute affected buildings ---
-# flood_files = {
-#     2018: "FloodMask_2018.tif",
-#     2019: "FloodMask_2019.tif",
-#     2020: "FloodMask_2020.tif",
-#     # 2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
-#     # 2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
-# }
-
-# flooded_by_year = {}
-# for year, path in flood_files.items():
-#     if os.path.exists(path):
-#         flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
-
-# # --- Streamlit UI ---
-# st.title("🌊 Flood Impact on Buildings in Khartoum (2017–2022)")
-# year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
-# flooded = flooded_by_year[year]
-
-# st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
-
-# fig, ax = plt.subplots(figsize=(10, 8))
-# khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
-# buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
-# flooded.plot(ax=ax, color='red', label='Flooded Buildings')
-# ax.legend()
-# st.pyplot(fig)
-
-# # --- Optional download ---
-# st.download_button(
-#     label=f"Download Flooded Buildings ({year})",
-#     data=flooded.to_csv(index=False),
-#     file_name=f"flooded_buildings_{year}.csv",
-#     mime="text/csv"
-# )
-
 import geopandas as gpd
 import pandas as pd
 import rasterio
@@ -107,112 +28,191 @@ from shapely import wkt
 import matplotlib.pyplot as plt
 import streamlit as st
 import os
-from rasterio.plot import show
 
 # --- Load Khartoum boundary ---
-try:
-    sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
-    khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
-except Exception as e:
-    st.error(f"❌ Error loading Khartoum shapefile: {e}")
-    st.stop()
+sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
+khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
 
-# --- Load buildings CSV from Google Drive ---
+# --- Load buildings CSV and convert WKT to GeoDataFrame ---
+# buildings_df = pd.read_csv("/content/drive/My Drive/GIS_FTL_LAST/169_buildings.csv")
+# buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+# buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
+# https://drive.google.com/file/d/1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa/view?usp=drive_link
+# url = "https://drive.google.com/uc?id=1t_wdIU9zDTLeJ0ImEygGARZtqseM0rwa"
 url = "https://drive.google.com/uc?id=1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
-try:
-    buildings_df = pd.read_csv(url)
-    st.subheader("📍 Sample Building Data")
-    st.dataframe(buildings_df.head())
-except Exception as e:
-    st.error(f"❌ Error loading buildings CSV: {e}")
-    st.stop()
+# https://drive.google.com/file/d/1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU/view?usp=sharing
+buildings_df = pd.read_csv(url) 
+# file_id = "1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
+# gdown.download(f"https://drive.google.com/uc?id={file_id}", "buildings1.csv", quiet=False)
+# buildings_df = pd.read_csv("buildings1.csv")
+st.subheader("📍 Sample Data")
+st.dataframe(buildings_df.head())
+buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
+# # --- Clip buildings to Khartoum ---
+buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
 
-# --- Parse WKT geometry ---
-if 'geometry' in buildings_df.columns:
-    try:
-        buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-        buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-    except Exception as e:
-        st.error(f"❌ Error parsing WKT geometries: {e}")
-        st.stop()
-else:
-    st.error("❌ 'geometry' column not found in buildings CSV.")
-    st.stop()
-
-# --- Clip buildings to Khartoum ---
-try:
-    buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
-except Exception as e:
-    st.error(f"❌ Error clipping buildings to Khartoum: {e}")
-    st.stop()
-
-# --- Zonal stats with CRS alignment and debug logging ---
+# --- Efficient zonal stats function with chunking ---
 def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
     flooded_chunks = []
-    try:
-        with rasterio.open(flood_path) as src:
-            raster_crs = src.crs
-            buildings_gdf = buildings_gdf.to_crs(raster_crs)
-            for i in range(0, len(buildings_gdf), chunk_size):
-                chunk = buildings_gdf.iloc[i:i+chunk_size]
-                stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
-                if not stats:
-                    st.warning(f"⚠️ No stats returned for chunk {i}-{i+chunk_size}")
-                flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
-                flooded_chunks.append(chunk.iloc[flooded_idx])
-    except Exception as e:
-        st.error(f"❌ Error in zonal stats: {e}")
-        return gpd.GeoDataFrame(columns=buildings_gdf.columns)
-    return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
+    buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
+    for i in range(0, len(buildings_gdf), chunk_size):
+        chunk = buildings_gdf.iloc[i:i+chunk_size]
+        stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
+        flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
+        flooded_chunks.append(chunk.iloc[flooded_idx])
+    return pd.concat(flooded_chunks).to_crs("EPSG:4326")
 
 # --- Load flood masks and compute affected buildings ---
 flood_files = {
     2018: "data/FloodMask_2018.tif",
     2019: "data/FloodMask_2019.tif",
-    2020: "data/FloodMask_2020.tif"
+    2020: "data/FloodMask_2020.tif",
+    # 2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
+    # 2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
 }
 
 flooded_by_year = {}
 for year, path in flood_files.items():
     if os.path.exists(path):
         flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
-    else:
-        st.warning(f"📁 Flood mask not found for {year}: {path}")
 
 # --- Streamlit UI ---
-st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
+st.title("🌊 Flood Impact on Buildings in Khartoum (2017–2022)")
+year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
+flooded = flooded_by_year[year]
 
-if flooded_by_year:
-    year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
-    flooded = flooded_by_year.get(year)
+st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
 
-    if flooded is not None and not flooded.empty:
-        st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
+fig, ax = plt.subplots(figsize=(10, 8))
+khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
+buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
+flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+ax.legend()
+st.pyplot(fig)
 
-        fig, ax = plt.subplots(figsize=(10, 8))
+# --- Optional download ---
+st.download_button(
+    label=f"Download Flooded Buildings ({year})",
+    data=flooded.to_csv(index=False),
+    file_name=f"flooded_buildings_{year}.csv",
+    mime="text/csv"
+)
 
-        # Plot flood raster in blue
-        try:
-            with rasterio.open(flood_files[year]) as src:
-                show(src, ax=ax, cmap='Blues', alpha=0.5)
-        except Exception as e:
-            st.warning(f"⚠️ Could not display flood raster: {e}")
+# import geopandas as gpd
+# import pandas as pd
+# import rasterio
+# from rasterstats import zonal_stats
+# from shapely import wkt
+# import matplotlib.pyplot as plt
+# import streamlit as st
+# import os
+# from rasterio.plot import show
 
-        # Plot vector layers
-        khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
-        buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
-        flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+# # --- Load Khartoum boundary ---
+# try:
+#     sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
+#     khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
+# except Exception as e:
+#     st.error(f"❌ Error loading Khartoum shapefile: {e}")
+#     st.stop()
 
-        ax.legend()
-        st.pyplot(fig)
+# # --- Load buildings CSV from Google Drive ---
+# url = "https://drive.google.com/uc?id=1lgJB2uDqc8GutFgfO7gxJZm9DptVgphU"
+# try:
+#     buildings_df = pd.read_csv(url)
+#     st.subheader("📍 Sample Building Data")
+#     st.dataframe(buildings_df.head())
+# except Exception as e:
+#     st.error(f"❌ Error loading buildings CSV: {e}")
+#     st.stop()
 
-        st.download_button(
-            label=f"Download Flooded Buildings ({year})",
-            data=flooded.to_csv(index=False),
-            file_name=f"flooded_buildings_{year}.csv",
-            mime="text/csv"
-        )
-    else:
-        st.warning(f"No flooded buildings found for {year}.")
-else:
-    st.warning("No flood data available.")
+# # --- Parse WKT geometry ---
+# if 'geometry' in buildings_df.columns:
+#     try:
+#         buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+#         buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
+#     except Exception as e:
+#         st.error(f"❌ Error parsing WKT geometries: {e}")
+#         st.stop()
+# else:
+#     st.error("❌ 'geometry' column not found in buildings CSV.")
+#     st.stop()
+
+# # --- Clip buildings to Khartoum ---
+# try:
+#     buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
+# except Exception as e:
+#     st.error(f"❌ Error clipping buildings to Khartoum: {e}")
+#     st.stop()
+
+# # --- Zonal stats with CRS alignment and debug logging ---
+# def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
+#     flooded_chunks = []
+#     try:
+#         with rasterio.open(flood_path) as src:
+#             raster_crs = src.crs
+#             buildings_gdf = buildings_gdf.to_crs(raster_crs)
+#             for i in range(0, len(buildings_gdf), chunk_size):
+#                 chunk = buildings_gdf.iloc[i:i+chunk_size]
+#                 stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
+#                 if not stats:
+#                     st.warning(f"⚠️ No stats returned for chunk {i}-{i+chunk_size}")
+#                 flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
+#                 flooded_chunks.append(chunk.iloc[flooded_idx])
+#     except Exception as e:
+#         st.error(f"❌ Error in zonal stats: {e}")
+#         return gpd.GeoDataFrame(columns=buildings_gdf.columns)
+#     return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
+
+# # --- Load flood masks and compute affected buildings ---
+# flood_files = {
+#     2018: "data/FloodMask_2018.tif",
+#     2019: "data/FloodMask_2019.tif",
+#     2020: "data/FloodMask_2020.tif"
+# }
+
+# flooded_by_year = {}
+# for year, path in flood_files.items():
+#     if os.path.exists(path):
+#         flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
+#     else:
+#         st.warning(f"📁 Flood mask not found for {year}: {path}")
+
+# # --- Streamlit UI ---
+# st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
+
+# if flooded_by_year:
+#     year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
+#     flooded = flooded_by_year.get(year)
+
+#     if flooded is not None and not flooded.empty:
+#         st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
+
+#         fig, ax = plt.subplots(figsize=(10, 8))
+
+#         # Plot flood raster in blue
+#         try:
+#             with rasterio.open(flood_files[year]) as src:
+#                 show(src, ax=ax, cmap='Blues', alpha=0.5)
+#         except Exception as e:
+#             st.warning(f"⚠️ Could not display flood raster: {e}")
+
+#         # Plot vector layers
+#         khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
+#         buildings_in_khartoum.plot(ax=ax, color='gray', alpha=0.3, label='All Buildings')
+#         flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+
+#         ax.legend()
+#         st.pyplot(fig)
+
+#         st.download_button(
+#             label=f"Download Flooded Buildings ({year})",
+#             data=flooded.to_csv(index=False),
+#             file_name=f"flooded_buildings_{year}.csv",
+#             mime="text/csv"
+#         )
+#     else:
+#         st.warning(f"No flooded buildings found for {year}.")
+# else:
+#     st.warning("No flood data available.")
