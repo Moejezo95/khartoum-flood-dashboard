@@ -56,10 +56,9 @@ def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
 
 # --- Load flood masks and compute affected buildings ---
 flood_files = {
-    # 2017: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2017.tif",
-    2018: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2018.tif",
-    2019: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2019.tif",
-    2020: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2020.tif",
+    2018: "FloodMask_2018.tif",
+    2019: "FloodMask_2019.tif",
+    2020: "FloodMask_2020.tif",
     # 2021: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2021.tif",
     # 2022: "/content/drive/My Drive/GIS_FTL_LAST/FloodMask_2022.tif"
 }
