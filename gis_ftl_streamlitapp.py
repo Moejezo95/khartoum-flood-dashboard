@@ -110,6 +110,9 @@ year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
 flooded = flooded_by_year[year]
 
 st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
+
+st.write(f"🔍 Buildings in Khartoum: {len(buildings_in_khartoum)}")
+
 st.write("🖼️ Starting plot generation...")
 
 # --- Safe plotting block ---
