@@ -116,7 +116,6 @@ st.write(f"🔍 Buildings in Khartoum: {len(buildings_in_khartoum)}")
 st.write("🖼️ Starting plot generation...")
 
 # --- Safe plotting block ---
-# --- Safe plotting block ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
     fig.patch.set_facecolor('#f9f9f9')  # Light gray background
@@ -129,9 +128,9 @@ try:
     if not buildings_in_khartoum.empty:
         buildings_in_khartoum.plot(
             ax=ax,
-            color='#27ae60',
+            color='#27ae60',  # vivid green
             edgecolor='black',
-            linewidth=0.3,
+            linewidth=0.5,
             alpha=1.0,
             label='All Buildings'
         )
@@ -142,18 +141,19 @@ try:
             ax=ax,
             color='red',
             edgecolor='black',
-            linewidth=0.3,
+            linewidth=0.5,
             label='Flooded Buildings'
         )
+
+    # Zoom to buildings extent
+    bounds = buildings_in_khartoum.total_bounds
+    ax.set_xlim(bounds[0], bounds[2])
+    ax.set_ylim(bounds[1], bounds[3])
 
     ax.set_title(f"Flood Impact in {year}", fontsize=16)
     ax.axis('off')
     ax.legend()
     st.pyplot(fig)
-
-except Exception as e:
-    st.error(f"❌ Plotting failed: {e}")
-
 
 except Exception as e:
     st.error(f"❌ Plotting failed: {e}")
