@@ -177,6 +177,7 @@ if view_mode == "Centroids":
 else:
     buildings_to_plot = buildings_in_khartoum
     flooded_to_plot = flooded
+plot_interactive_flood_map(flood_files[year], buildings_to_plot, flooded_to_plot)
 
 # --- Plotting ---
 # try:
