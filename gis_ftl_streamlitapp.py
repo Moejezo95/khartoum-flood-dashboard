@@ -114,7 +114,7 @@ st.write("🖼️ Starting plot generation...")
 # --- Safe plotting block ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
-fig.patch.set_facecolor('#f9f9f9')  # Light gray background
+    fig.patch.set_facecolor('#f9f9f9')  # Light gray background
 
 # Plot Khartoum boundary first (behind everything)
 if not khartoum_gdf.empty:
