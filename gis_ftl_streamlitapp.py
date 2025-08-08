@@ -11,12 +11,13 @@ import pandas as pd
 import rasterio
 from rasterstats import zonal_stats
 from shapely import wkt
+import matplotlib
+matplotlib.use("Agg")  # ✅ Use non-interactive backend for Streamlit
 import matplotlib.pyplot as plt
 import streamlit as st
 import os
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")  # ✅ Use non-interactive backend for Streamlit
+
 st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
 
 # --- Load Khartoum boundary ---
