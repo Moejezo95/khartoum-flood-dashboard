@@ -37,9 +37,20 @@ except Exception as e:
     st.stop()
 
 # --- Parse WKT geometry ---
+# --- Parse and clean WKT geometry ---
 if 'geometry' in buildings_df.columns:
     try:
+        # Clean whitespace and quotes
+        buildings_df['geometry'] = buildings_df['geometry'].astype(str).str.strip().str.replace('"', '')
+
+        # Drop missing or malformed geometries
+        valid_wkt = buildings_df['geometry'].apply(lambda x: isinstance(x, str) and x.startswith(('POINT', 'POLYGON', 'MULTIPOLYGON')))
+        buildings_df = buildings_df[valid_wkt].copy()
+
+        # Parse WKT strings
         buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+
+        # Convert to GeoDataFrame
         buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
     except Exception as e:
         st.error(f"❌ Error parsing WKT geometries: {e}")
@@ -47,6 +58,7 @@ if 'geometry' in buildings_df.columns:
 else:
     st.error("❌ 'geometry' column not found in buildings CSV.")
     st.stop()
+
 
 # --- Clip buildings to Khartoum ---
 try:
