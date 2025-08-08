@@ -126,7 +126,7 @@ try:
     if not khartoum_gdf.empty:
         khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
 
-    # Plot flood raster safely
+    # ✅ Plot flood raster
     if year in flood_files and os.path.exists(flood_files[year]):
         plot_flood_raster(ax, flood_files[year])
 
@@ -158,7 +158,6 @@ try:
 
 except Exception as e:
     st.error(f"❌ Plotting failed: {e}")
-
 
 
 # --- Optional download ---
