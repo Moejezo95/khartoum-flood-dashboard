@@ -114,6 +114,7 @@ st.write("🖼️ Starting plot generation...")
 # --- Safe plotting block ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
+    fig.patch.set_facecolor('#f9f9f9')  # Light gray background
 
     # plot_flood_raster(ax, flood_files[year])
 
@@ -123,12 +124,12 @@ try:
         st.warning("⚠️ Khartoum boundary is empty.")
 
     if not buildings_in_khartoum.empty:
-        buildings_in_khartoum.plot(ax=ax, color='lightgreen', alpha=0.4, label='All Buildings')
+        buildings_in_khartoum.plot(ax=ax, color='#2ecc71', edgecolor='black', linewidth=0.3, alpha=0.8, label='All Buildings')
     else:
         st.warning("⚠️ No buildings found in Khartoum.")
 
     if not flooded.empty and flooded.geometry.notnull().all():
-        flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+        flooded.plot(ax=ax, color='red', edgecolor='black', linewidth=0.3, label='Flooded Buildings')
     else:
         st.warning(f"⚠️ No flooded buildings to plot for {year}.")
 
