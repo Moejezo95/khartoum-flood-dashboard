@@ -12,7 +12,6 @@ import rasterio
 from rasterstats import zonal_stats
 from shapely import wkt
 import matplotlib
-matplotlib.use("Agg")  # ✅ Use non-interactive backend for Streamlit
 import matplotlib.pyplot as plt
 import streamlit as st
 import os
