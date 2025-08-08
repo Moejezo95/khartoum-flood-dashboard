@@ -13,6 +13,11 @@ from rasterstats import zonal_stats
 from shapely import wkt
 import matplotlib.pyplot as plt
 import streamlit as st
+import folium
+from folium import raster_layers
+from streamlit_folium import st_folium
+from matplotlib.colors import ListedColormap
+import tempfile
 import os
 import numpy as np
 
@@ -212,11 +217,11 @@ else:
 
 # except Exception as e:
 #     st.error(f"❌ Plotting failed: {e}")
-import folium
-from folium import raster_layers
-from streamlit_folium import st_folium
-from matplotlib.colors import ListedColormap
-import tempfile
+# import folium
+# from folium import raster_layers
+# from streamlit_folium import st_folium
+# from matplotlib.colors import ListedColormap
+# import tempfile
 
 def plot_interactive_flood_map(raster_path, buildings_gdf, flooded_gdf):
     try:
