@@ -282,13 +282,10 @@ from rasterstats import zonal_stats
 from shapely import wkt
 import matplotlib.pyplot as plt
 import streamlit as st
-import folium
-from folium import raster_layers
-from streamlit_folium import st_folium
-from matplotlib.colors import ListedColormap
-import tempfile
 import os
 import numpy as np
+
+from matplotlib.colors import ListedColormap
 
 st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
 
@@ -375,52 +372,26 @@ if not flooded_by_year:
     st.warning("⚠️ No flood data available.")
     st.stop()
 
-# --- Interactive Folium Map ---
-def plot_interactive_flood_map(raster_path, buildings_gdf, flooded_gdf):
+# --- Raster plotting helper ---
+def plot_flood_raster(ax, raster_path, scale_factor=0.1):
     try:
         with rasterio.open(raster_path) as src:
-            bounds = src.bounds
-            center = [(bounds.top + bounds.bottom) / 2, (bounds.left + bounds.right) / 2]
+            st.write(f"✅ Raster opened: {raster_path}")
+            new_height = int(src.height * scale_factor)
+            new_width = int(src.width * scale_factor)
+            flood_data = src.read(
+                1,
+                out_shape=(new_height, new_width),
+                resampling=rasterio.enums.Resampling.nearest
+            )
+            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
 
-            m = folium.Map(location=center, zoom_start=12, tiles='CartoDB positron')
-
-            flood_data = src.read(1)
-            cmap = ListedColormap(['none', '#08306b'])  # 0 = transparent, 1 = dark blue
-
-            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpfile:
-                plt.imsave(tmpfile.name, flood_data, cmap=cmap, vmin=0, vmax=1)
-                raster_layers.ImageOverlay(
-                    image=tmpfile.name,
-                    bounds=[[bounds.bottom, bounds.left], [bounds.top, bounds.right]],
-                    opacity=0.6,
-                    interactive=True,
-                    cross_origin=False
-                ).add_to(m)
-
-            for _, row in buildings_gdf.iterrows():
-                folium.CircleMarker(
-                    location=[row.geometry.centroid.y, row.geometry.centroid.x],
-                    radius=3,
-                    color='green',
-                    fill=True,
-                    fill_opacity=0.7,
-                    popup='Building'
-                ).add_to(m)
-
-            for _, row in flooded_gdf.iterrows():
-                folium.CircleMarker(
-                    location=[row.geometry.centroid.y, row.geometry.centroid.x],
-                    radius=3,
-                    color='red',
-                    fill=True,
-                    fill_opacity=0.9,
-                    popup='Flooded'
-                ).add_to(m)
-
-            st_folium(m, width=1000, height=700)
+            # Custom colormap: 0 = light gray, 1 = dark blue
+            cmap = ListedColormap(['lightgray', '#08306b'])
+            ax.imshow(flood_data, extent=extent, cmap=cmap, vmin=0, vmax=1, alpha=0.6)
 
     except Exception as e:
-        st.error(f"❌ Interactive map failed: {e}")
+        st.warning(f"⚠️ Could not plot flood raster: {e}")
 
 # --- Streamlit UI ---
 st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
@@ -458,8 +429,45 @@ else:
     buildings_to_plot = buildings_in_khartoum
     flooded_to_plot = flooded
 
-# --- Call Folium Map ---
-plot_interactive_flood_map(flood_files[year], buildings_to_plot, flooded_to_plot)
+# --- Plotting ---
+try:
+    fig, ax = plt.subplots(figsize=(10, 8))
+    fig.patch.set_facecolor('#f9f9f9')
+
+    if not khartoum_gdf.empty:
+        khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
+
+    scale_factor = st.slider("🧭 Raster Resolution", 0.05, 1.0, 0.1)
+
+    if year in flood_files and os.path.exists(flood_files[year]):
+        plot_flood_raster(ax, flood_files[year], scale_factor)
+
+    if not buildings_to_plot.empty:
+        buildings_to_plot.plot(
+            ax=ax,
+            color='#27ae60',
+            edgecolor='black',
+            linewidth=0.3,
+            alpha=1.0,
+            label='All Buildings'
+        )
+
+    if not flooded_to_plot.empty and flooded_to_plot.geometry.notnull().all():
+        flooded_to_plot.plot(
+            ax=ax,
+            color='red',
+            edgecolor='black',
+            linewidth=0.3,
+            label='Flooded Buildings'
+        )
+
+    ax.set_title(f"Flood Impact in {year}", fontsize=16)
+    ax.axis('off')
+    ax.legend()
+    st.pyplot(fig)
+
+except Exception as e:
+    st.error(f"❌ Plotting failed: {e}")
 
 # --- Optional download ---
 st.download_button(
