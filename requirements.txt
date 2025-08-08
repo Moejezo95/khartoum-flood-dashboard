@@ -1,3 +1,4 @@
+streamlit
 pandas
 rasterio
 rasterstats
@@ -7,6 +8,7 @@ numpy
 folium
 streamlit-folium
 geopandas
+
 
 
 
