@@ -6,3 +6,9 @@ rasterstats
 shapely
 matplotlib
 numpy
+folium>=0.14.0
+streamlit-folium>=0.12.0
+matplotlib>=3.7.0
+geopandas>=0.13.0
+rasterio>=1.3.0
+
