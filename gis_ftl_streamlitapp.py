@@ -119,47 +119,81 @@ st.write("📏 Average area:", buildings_in_khartoum.geometry.area.mean())
 st.write("🖼️ Starting plot generation...")
 
 # --- Safe plotting block ---
-try:
-    fig, ax = plt.subplots(figsize=(10, 8))
-    fig.patch.set_facecolor('#f9f9f9')  # Light gray background
+# try:
+#     fig, ax = plt.subplots(figsize=(10, 8))
+#     fig.patch.set_facecolor('#f9f9f9')  # Light gray background
 
-    # Plot Khartoum boundary first
-    if not khartoum_gdf.empty:
-        khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
+#     # Plot Khartoum boundary first
+#     if not khartoum_gdf.empty:
+#         khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
 
-    # Plot all buildings
-    if not buildings_in_khartoum.empty:
-        buildings_in_khartoum.plot(
-            ax=ax,
-            color='#27ae60',  # vivid green
-            edgecolor='black',
-            linewidth=0.5,
-            alpha=1.0,
-            label='All Buildings'
-        )
+#     # Plot all buildings
+#     if not buildings_in_khartoum.empty:
+#         buildings_in_khartoum.plot(
+#             ax=ax,
+#             color='#27ae60',  # vivid green
+#             edgecolor='black',
+#             linewidth=0.5,
+#             alpha=1.0,
+#             label='All Buildings'
+#         )
 
-    # Plot flooded buildings
-    if not flooded.empty and flooded.geometry.notnull().all():
-        flooded.plot(
-            ax=ax,
-            color='red',
-            edgecolor='black',
-            linewidth=0.5,
-            label='Flooded Buildings'
-        )
+#     # Plot flooded buildings
+#     if not flooded.empty and flooded.geometry.notnull().all():
+#         flooded.plot(
+#             ax=ax,
+#             color='red',
+#             edgecolor='black',
+#             linewidth=0.5,
+#             label='Flooded Buildings'
+#         )
 
-    # Zoom to buildings extent
-    bounds = buildings_in_khartoum.total_bounds
-    ax.set_xlim(bounds[0], bounds[2])
-    ax.set_ylim(bounds[1], bounds[3])
+#     # Zoom to buildings extent
+#     bounds = buildings_in_khartoum.total_bounds
+#     ax.set_xlim(bounds[0], bounds[2])
+#     ax.set_ylim(bounds[1], bounds[3])
 
-    ax.set_title(f"Flood Impact in {year}", fontsize=16)
-    ax.axis('off')
-    ax.legend()
-    st.pyplot(fig)
+#     ax.set_title(f"Flood Impact in {year}", fontsize=16)
+#     ax.axis('off')
+#     ax.legend()
+#     st.pyplot(fig)
 
-except Exception as e:
-    st.error(f"❌ Plotting failed: {e}")
+# except Exception as e:
+#     st.error(f"❌ Plotting failed: {e}")
+# Compute centroids for visibility
+centroids_gdf = buildings_in_khartoum.copy()
+centroids_gdf['geometry'] = centroids_gdf.geometry.centroid
+
+# Plotting block
+fig, ax = plt.subplots(figsize=(10, 8))
+fig.patch.set_facecolor('#f9f9f9')
+
+# Plot Khartoum boundary
+khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
+
+# Plot building centroids
+centroids_gdf.plot(
+    ax=ax,
+    color='limegreen',
+    markersize=20,
+    label='Building Centroids'
+)
+
+# Plot flooded buildings
+if not flooded.empty and flooded.geometry.notnull().all():
+    flooded_centroids = flooded.copy()
+    flooded_centroids['geometry'] = flooded_centroids.geometry.centroid
+    flooded_centroids.plot(
+        ax=ax,
+        color='red',
+        markersize=30,
+        label='Flooded Buildings'
+    )
+
+ax.set_title(f"Flood Impact in {year}", fontsize=16)
+ax.axis('off')
+ax.legend()
+st.pyplot(fig)
 
 # --- Optional download ---
 st.download_button(
