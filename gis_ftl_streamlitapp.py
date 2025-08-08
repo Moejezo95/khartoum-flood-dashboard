@@ -298,18 +298,19 @@ def plot_flood_raster(ax, raster_path, scale_factor=0.1):
 
             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
 
-            # Create two masks: flooded (==1) and non-flooded (==0)
+            # Create two masks
             flooded_mask = np.ma.masked_where(flood_data != 1, flood_data)
             non_flooded_mask = np.ma.masked_where(flood_data != 0, flood_data)
 
-            # Plot non-flooded in gray
+            # Plot non-flooded in light gray
             ax.imshow(non_flooded_mask, extent=extent, cmap='Greys', alpha=0.3)
 
-            # Plot flooded in blue
-            ax.imshow(flooded_mask, extent=extent, cmap='Blues', alpha=0.6)
+            # Plot flooded in dark blue
+            ax.imshow(flooded_mask, extent=extent, cmap='Blues_r', alpha=0.8)
 
     except Exception as e:
         st.warning(f"⚠️ Could not plot flood raster: {e}")
+
 
 # --- Streamlit UI ---
 st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
