@@ -114,30 +114,38 @@ st.write("🖼️ Starting plot generation...")
 # --- Safe plotting block ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
-    fig.patch.set_facecolor('#f9f9f9')  # Light gray background
+fig.patch.set_facecolor('#f9f9f9')  # Light gray background
 
-    # plot_flood_raster(ax, flood_files[year])
+# Plot Khartoum boundary first (behind everything)
+if not khartoum_gdf.empty:
+    khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
 
-    if not khartoum_gdf.empty:
-        khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
-    else:
-        st.warning("⚠️ Khartoum boundary is empty.")
+# Plot all buildings next
+if not buildings_in_khartoum.empty:
+    buildings_in_khartoum.plot(
+        ax=ax,
+        color='#27ae60',  # darker green
+        edgecolor='black',
+        linewidth=0.3,
+        alpha=1.0,
+        label='All Buildings'
+    )
 
-    if not buildings_in_khartoum.empty:
-        buildings_in_khartoum.plot(ax=ax, color='#2ecc71', edgecolor='black', linewidth=0.3, alpha=0.8, label='All Buildings')
-    else:
-        st.warning("⚠️ No buildings found in Khartoum.")
+# Plot flooded buildings last (on top)
+if not flooded.empty and flooded.geometry.notnull().all():
+    flooded.plot(
+        ax=ax,
+        color='red',
+        edgecolor='black',
+        linewidth=0.3,
+        label='Flooded Buildings'
+    )
 
-    if not flooded.empty and flooded.geometry.notnull().all():
-        flooded.plot(ax=ax, color='red', edgecolor='black', linewidth=0.3, label='Flooded Buildings')
-    else:
-        st.warning(f"⚠️ No flooded buildings to plot for {year}.")
+ax.set_title(f"Flood Impact in {year}", fontsize=16)
+ax.axis('off')
+ax.legend()
+st.pyplot(fig)
 
-    ax.set_title(f"Flood Impact in {year}", fontsize=16)
-    ax.axis('off')
-    ax.legend()
-
-    st.pyplot(fig)
 
 except Exception as e:
     st.error(f"❌ Plotting failed: {e}")
