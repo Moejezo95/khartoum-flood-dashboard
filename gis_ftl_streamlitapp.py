@@ -112,6 +112,9 @@ flooded = flooded_by_year[year]
 st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
 
 st.write(f"🔍 Buildings in Khartoum: {len(buildings_in_khartoum)}")
+st.write("📐 Geometry types:", buildings_in_khartoum.geometry.geom_type.unique())
+st.write("📏 Average area:", buildings_in_khartoum.geometry.area.mean())
+
 
 st.write("🖼️ Starting plot generation...")
 
