@@ -21,7 +21,8 @@ st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
 # --- Load Khartoum boundary ---
 try:
     sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
-    khartoum_gdf = sudan_gdf[sudan_gdf['id'] == 'SDKH']
+    khartoum_gdf = sudan_gdf.copy()
+
 except Exception as e:
     st.error(f"❌ Error loading Khartoum shapefile: {e}")
     st.stop()
