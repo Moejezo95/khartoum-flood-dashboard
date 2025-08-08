@@ -124,37 +124,26 @@ fig.patch.set_facecolor('#f9f9f9')
 # Plot Khartoum boundary
 khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
 
-# Plot buildings based on selected view
-if view_mode == "Centroids":
-    centroids_gdf = buildings_in_khartoum.copy()
-    centroids_gdf['geometry'] = centroids_gdf.geometry.centroid
-    centroids_gdf.plot(
-        ax=ax,
-        color='limegreen',
-        markersize=20,
-        label='Building Centroids'
-    )
-else:
-    buildings_in_khartoum.plot(
-        ax=ax,
-        color='#27ae60',
-        edgecolor='black',
-        linewidth=0.3,
-        alpha=1.0,
-        label='All Buildings'
-    )
+# Plot flood raster
+plot_flood_raster(ax, flood_files[year])
+
+# Plot buildings
+buildings_in_khartoum.plot(
+    ax=ax,
+    color='#27ae60',
+    edgecolor='black',
+    linewidth=0.3,
+    alpha=1.0,
+    label='All Buildings'
+)
 
 # Plot flooded buildings
 if not flooded.empty and flooded.geometry.notnull().all():
-    flooded_plot = flooded.copy()
-    if view_mode == "Centroids":
-        flooded_plot['geometry'] = flooded_plot.geometry.centroid
-    flooded_plot.plot(
+    flooded.plot(
         ax=ax,
         color='red',
         edgecolor='black',
         linewidth=0.3,
-        markersize=30 if view_mode == "Centroids" else None,
         label='Flooded Buildings'
     )
 
@@ -162,6 +151,7 @@ ax.set_title(f"Flood Impact in {year}", fontsize=16)
 ax.axis('off')
 ax.legend()
 st.pyplot(fig)
+
 
 
 # --- Optional download ---
