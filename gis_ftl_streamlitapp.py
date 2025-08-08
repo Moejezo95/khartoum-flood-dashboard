@@ -286,16 +286,28 @@ def plot_flood_raster(ax, raster_path, scale_factor=0.1):
     try:
         with rasterio.open(raster_path) as src:
             st.write(f"✅ Raster opened: {raster_path}")
+
             new_height = int(src.height * scale_factor)
             new_width = int(src.width * scale_factor)
+
             flood_data = src.read(
                 1,
                 out_shape=(new_height, new_width),
                 resampling=rasterio.enums.Resampling.nearest
             )
-            flood_data = np.ma.masked_where(flood_data == 0, flood_data)
+
             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
-            ax.imshow(flood_data, extent=extent, cmap='Blues', alpha=0.5)
+
+            # Create two masks: flooded (==1) and non-flooded (==0)
+            flooded_mask = np.ma.masked_where(flood_data != 1, flood_data)
+            non_flooded_mask = np.ma.masked_where(flood_data != 0, flood_data)
+
+            # Plot non-flooded in gray
+            ax.imshow(non_flooded_mask, extent=extent, cmap='Greys', alpha=0.3)
+
+            # Plot flooded in blue
+            ax.imshow(flooded_mask, extent=extent, cmap='Blues', alpha=0.6)
+
     except Exception as e:
         st.warning(f"⚠️ Could not plot flood raster: {e}")
 
