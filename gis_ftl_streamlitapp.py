@@ -118,39 +118,46 @@ st.write("🖼️ Starting plot generation...")
 # --- View toggle ---
 view_mode = st.radio("🗺️ Select Building View Mode", ["Polygons", "Centroids"])
 # ploting the graph
-fig, ax = plt.subplots(figsize=(10, 8))
-fig.patch.set_facecolor('#f9f9f9')
+try:
+    fig, ax = plt.subplots(figsize=(10, 8))
+    fig.patch.set_facecolor('#f9f9f9')
 
-# Plot Khartoum boundary
-khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
+    # Plot Khartoum boundary
+    if not khartoum_gdf.empty:
+        khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
 
-# Plot flood raster
-plot_flood_raster(ax, flood_files[year])
+    # Plot flood raster safely
+    if year in flood_files and os.path.exists(flood_files[year]):
+        plot_flood_raster(ax, flood_files[year])
 
-# Plot buildings
-buildings_in_khartoum.plot(
-    ax=ax,
-    color='#27ae60',
-    edgecolor='black',
-    linewidth=0.3,
-    alpha=1.0,
-    label='All Buildings'
-)
+    # Plot all buildings
+    if not buildings_in_khartoum.empty:
+        buildings_in_khartoum.plot(
+            ax=ax,
+            color='#27ae60',
+            edgecolor='black',
+            linewidth=0.3,
+            alpha=1.0,
+            label='All Buildings'
+        )
 
-# Plot flooded buildings
-if not flooded.empty and flooded.geometry.notnull().all():
-    flooded.plot(
-        ax=ax,
-        color='red',
-        edgecolor='black',
-        linewidth=0.3,
-        label='Flooded Buildings'
-    )
+    # Plot flooded buildings
+    if not flooded.empty and flooded.geometry.notnull().all():
+        flooded.plot(
+            ax=ax,
+            color='red',
+            edgecolor='black',
+            linewidth=0.3,
+            label='Flooded Buildings'
+        )
 
-ax.set_title(f"Flood Impact in {year}", fontsize=16)
-ax.axis('off')
-ax.legend()
-st.pyplot(fig)
+    ax.set_title(f"Flood Impact in {year}", fontsize=16)
+    ax.axis('off')
+    ax.legend()
+    st.pyplot(fig)
+
+except Exception as e:
+    st.error(f"❌ Plotting failed: {e}")
 
 
 
