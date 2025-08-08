@@ -98,6 +98,7 @@ def plot_flood_raster(ax, raster_path, scale_factor=0.1):
     try:
         with rasterio.open(raster_path) as src:
             st.write(f"✅ Raster opened: {raster_path}")
+
             # Calculate new shape
             new_height = int(src.height * scale_factor)
             new_width = int(src.width * scale_factor)
@@ -105,9 +106,9 @@ def plot_flood_raster(ax, raster_path, scale_factor=0.1):
             # Read and resample
             flood_data = src.read(
                 1,
-                out_shape=(1, new_height, new_width),
+                out_shape=(new_height, new_width),
                 resampling=rasterio.enums.Resampling.nearest
-            )[0]
+            )
 
             flood_data = np.ma.masked_where(flood_data == 0, flood_data)
 
@@ -140,10 +141,12 @@ try:
     # Plot Khartoum boundary
     if not khartoum_gdf.empty:
         khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
+    # --- Raster resolution slider ---
+    scale_factor = st.slider("🧭 Raster Resolution", 0.05, 1.0, 0.1)
 
     # ✅ Plot flood raster
     if year in flood_files and os.path.exists(flood_files[year]):
-        plot_flood_raster(ax, flood_files[year])
+        plot_flood_raster(ax, flood_files[year], scale_factor)
 
     # Plot all buildings
     if not buildings_in_khartoum.empty:
