@@ -117,11 +117,11 @@ try:
     fig.patch.set_facecolor('#f9f9f9')  # Light gray background
 
 # Plot Khartoum boundary first (behind everything)
-    if not khartoum_gdf.empty:
+if not khartoum_gdf.empty:
     khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
 
 # Plot all buildings next
-    if not buildings_in_khartoum.empty:
+if not buildings_in_khartoum.empty:
     buildings_in_khartoum.plot(
         ax=ax,
         color='#27ae60',  # darker green
@@ -132,7 +132,7 @@ try:
     )
 
 # Plot flooded buildings last (on top)
-    if not flooded.empty and flooded.geometry.notnull().all():
+if not flooded.empty and flooded.geometry.notnull().all():
     flooded.plot(
         ax=ax,
         color='red',
@@ -140,7 +140,6 @@ try:
         linewidth=0.3,
         label='Flooded Buildings'
     )
-
 ax.set_title(f"Flood Impact in {year}", fontsize=16)
 ax.axis('off')
 ax.legend()
