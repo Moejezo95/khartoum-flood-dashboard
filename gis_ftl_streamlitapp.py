@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import os
 import numpy as np
-
+import matplotlib
+matplotlib.use("Agg")  # ✅ Use non-interactive backend for Streamlit
 st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
 
 # --- Load Khartoum boundary ---
@@ -110,23 +111,37 @@ flooded = flooded_by_year[year]
 
 st.write(f"🏠 Buildings affected in {year}: **{len(flooded)}**")
 
+# ✅ Add a checkpoint to confirm plotting starts
+st.write("🖼️ Starting plot generation...")
+
+# ✅ Create figure safely
 fig, ax = plt.subplots(figsize=(10, 8))
-plot_flood_raster(ax, flood_files[year])
-khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
-buildings_in_khartoum.plot(ax=ax, color='lightgreen', alpha=0.4, label='All Buildings')
 
-if not flooded.empty and flooded.geometry.notnull().all():
-    flooded.plot(ax=ax, color='red', label='Flooded Buildings')
+# ✅ Plot flood raster with error handling
+try:
+    plot_flood_raster(ax, flood_files[year])
+except Exception as e:
+    st.error(f"❌ Failed to plot flood raster: {e}")
+
+# ✅ Plot Khartoum boundary if available
+if not khartoum_gdf.empty:
+    try:
+        khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none')
+    except Exception as e:
+        st.warning(f"⚠️ Could not plot Khartoum boundary: {e}")
 else:
-    st.warning(f"⚠️ No flooded buildings to plot for {year}.")
+    st.warning("⚠️ Khartoum boundary is empty.")
 
-ax.legend()
+# ✅ Plot buildings if available
+if not buildings_in_khartoum.empty:
+    try:
+        buildings_in_khartoum.plot(ax=ax, color='lightgreen', alpha=0.4, label='All Buildings')
+    except Exception as e:
+        st.warning(f"⚠️ Could not plot buildings: {e}")
+else:
+    st.warning("⚠️ No buildings found in Khartoum.")
+
+# ✅ Finalize and show plot
+ax.set_title(f"Flood Impact in {year}", fontsize=16)
+ax.axis('off')
 st.pyplot(fig)
-
-# --- Optional download ---
-st.download_button(
-    label=f"Download Flooded Buildings ({year})",
-    data=flooded.to_csv(index=False),
-    file_name=f"flooded_buildings_{year}.csv",
-    mime="text/csv"
-)
