@@ -94,17 +94,29 @@ if not flooded_by_year:
     st.stop()
 
 # --- Raster plotting helper ---
-def plot_flood_raster(ax, raster_path):
+def plot_flood_raster(ax, raster_path, scale_factor=0.1):
     try:
         with rasterio.open(raster_path) as src:
             st.write(f"✅ Raster opened: {raster_path}")
-            flood_data = src.read(1)
-            st.write(f"📏 Raster shape: {flood_data.shape}")
+            # Calculate new shape
+            new_height = int(src.height * scale_factor)
+            new_width = int(src.width * scale_factor)
+
+            # Read and resample
+            flood_data = src.read(
+                1,
+                out_shape=(1, new_height, new_width),
+                resampling=rasterio.enums.Resampling.nearest
+            )[0]
+
             flood_data = np.ma.masked_where(flood_data == 0, flood_data)
+
+            # Adjust extent
             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
             ax.imshow(flood_data, extent=extent, cmap='Blues', alpha=0.5)
     except Exception as e:
         st.warning(f"⚠️ Could not plot flood raster: {e}")
+
 
 
 # --- Streamlit UI ---
