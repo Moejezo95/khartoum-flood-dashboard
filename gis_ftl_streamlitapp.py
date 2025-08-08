@@ -119,7 +119,7 @@ def plot_flood_raster(ax, raster_path, scale_factor=0.1):
             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
 
             # Custom colormap: 0 = light gray, 1 = dark blue
-            cmap = ListedColormap(['lightgray', '#08306b'])
+            cmap = ListedColormap(['lightgray', '#5dade2'])  # medium-light blue
             ax.imshow(flood_data, extent=extent, cmap=cmap, vmin=0, vmax=1, alpha=0.6)
 
     except Exception as e:
@@ -207,4 +207,18 @@ st.download_button(
     data=flooded.to_csv(index=False),
     file_name=f"flooded_buildings_{year}.csv",
     mime="text/csv"
+)
+import io
+
+# Save figure to buffer
+buf = io.BytesIO()
+fig.savefig(buf, format="png", bbox_inches="tight")
+buf.seek(0)
+
+# Streamlit download button
+st.download_button(
+    label=f"📥 Download Plot ({year}) as PNG",
+    data=buf,
+    file_name=f"flood_plot_{year}.png",
+    mime="image/png"
 )
