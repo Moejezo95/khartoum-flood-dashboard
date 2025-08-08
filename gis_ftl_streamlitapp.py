@@ -177,6 +177,55 @@ if view_mode == "Centroids":
 else:
     buildings_to_plot = buildings_in_khartoum
     flooded_to_plot = flooded
+def plot_interactive_flood_map(raster_path, buildings_gdf, flooded_gdf):
+    try:
+        with rasterio.open(raster_path) as src:
+            bounds = src.bounds
+            center = [(bounds.top + bounds.bottom) / 2, (bounds.left + bounds.right) / 2]
+
+            # Create folium map
+            m = folium.Map(location=center, zoom_start=12, tiles='CartoDB positron')
+
+            # Save raster as temporary PNG with custom colormap
+            flood_data = src.read(1)
+            cmap = ListedColormap(['none', '#08306b'])  # 0 = transparent, 1 = dark blue
+
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpfile:
+                plt.imsave(tmpfile.name, flood_data, cmap=cmap, vmin=0, vmax=1)
+                raster_layers.ImageOverlay(
+                    image=tmpfile.name,
+                    bounds=[[bounds.bottom, bounds.left], [bounds.top, bounds.right]],
+                    opacity=0.6,
+                    interactive=True,
+                    cross_origin=False
+                ).add_to(m)
+
+            # Add building markers
+            for _, row in buildings_gdf.iterrows():
+                folium.CircleMarker(
+                    location=[row.geometry.y, row.geometry.x] if row.geometry.geom_type == 'Point' else [row.geometry.centroid.y, row.geometry.centroid.x],
+                    radius=3,
+                    color='green',
+                    fill=True,
+                    fill_opacity=0.7,
+                    popup='Building'
+                ).add_to(m)
+
+            for _, row in flooded_gdf.iterrows():
+                folium.CircleMarker(
+                    location=[row.geometry.y, row.geometry.x] if row.geometry.geom_type == 'Point' else [row.geometry.centroid.y, row.geometry.centroid.x],
+                    radius=3,
+                    color='red',
+                    fill=True,
+                    fill_opacity=0.9,
+                    popup='Flooded'
+                ).add_to(m)
+
+            st_folium(m, width=1000, height=700)
+
+    except Exception as e:
+        st.error(f"❌ Interactive map failed: {e}")
+
 plot_interactive_flood_map(flood_files[year], buildings_to_plot, flooded_to_plot)
 
 # --- Plotting ---
