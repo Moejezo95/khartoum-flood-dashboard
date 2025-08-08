@@ -144,20 +144,17 @@ else:
         label='All Buildings'
     )
 
-
-ax.set_title(f"Flood Impact in {year}", fontsize=16)
-ax.axis('off')
-ax.legend()
-st.pyplot(fig)
-
 # Plot flooded buildings
 if not flooded.empty and flooded.geometry.notnull().all():
-    flooded_centroids = flooded.copy()
-    flooded_centroids['geometry'] = flooded_centroids.geometry.centroid
-    flooded_centroids.plot(
+    flooded_plot = flooded.copy()
+    if view_mode == "Centroids":
+        flooded_plot['geometry'] = flooded_plot.geometry.centroid
+    flooded_plot.plot(
         ax=ax,
         color='red',
-        markersize=30,
+        edgecolor='black',
+        linewidth=0.3,
+        markersize=30 if view_mode == "Centroids" else None,
         label='Flooded Buildings'
     )
 
@@ -165,6 +162,7 @@ ax.set_title(f"Flood Impact in {year}", fontsize=16)
 ax.axis('off')
 ax.legend()
 st.pyplot(fig)
+
 
 # --- Optional download ---
 st.download_button(
