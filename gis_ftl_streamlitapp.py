@@ -330,6 +330,16 @@ st.write("🖼️ Starting plot generation...")
 # --- View toggle ---
 view_mode = st.radio("🗺️ Select Building View Mode", ["Polygons", "Centroids"])
 
+# --- Apply centroid transformation if selected ---
+if view_mode == "Centroids":
+    buildings_to_plot = buildings_in_khartoum.copy()
+    buildings_to_plot["geometry"] = buildings_to_plot.centroid
+    flooded_to_plot = flooded.copy()
+    flooded_to_plot["geometry"] = flooded_to_plot.centroid
+else:
+    buildings_to_plot = buildings_in_khartoum
+    flooded_to_plot = flooded
+
 # --- Plotting ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -343,8 +353,8 @@ try:
     if year in flood_files and os.path.exists(flood_files[year]):
         plot_flood_raster(ax, flood_files[year], scale_factor)
 
-    if not buildings_in_khartoum.empty:
-        buildings_in_khartoum.plot(
+    if not buildings_to_plot.empty:
+        buildings_to_plot.plot(
             ax=ax,
             color='#27ae60',
             edgecolor='black',
@@ -353,8 +363,8 @@ try:
             label='All Buildings'
         )
 
-    if not flooded.empty and flooded.geometry.notnull().all():
-        flooded.plot(
+    if not flooded_to_plot.empty and flooded_to_plot.geometry.notnull().all():
+        flooded_to_plot.plot(
             ax=ax,
             color='red',
             edgecolor='black',
@@ -369,6 +379,7 @@ try:
 
 except Exception as e:
     st.error(f"❌ Plotting failed: {e}")
+
 
 # --- Optional download ---
 st.download_button(
