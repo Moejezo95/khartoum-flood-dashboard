@@ -252,4 +252,6 @@ cols = st.columns(len(team_members))
 for col, member in zip(cols, team_members):
     col.image(member["photo"], width=120)
     col.markdown(f"**{member['name']}**")
-    col.markdown(f"[🔗 LinkedIn]({member['linkedin']})")
+    linkedin_icon = "https://cdn-icons-png.flaticon.com/512/174/174857.png"
+    col.markdown(f"[![LinkedIn]({linkedin_icon})]({member['linkedin']})", unsafe_allow_html=True)
+    
