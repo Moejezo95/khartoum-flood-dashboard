@@ -177,8 +177,8 @@ try:
     if not buildings_to_plot.empty:
         buildings_to_plot.plot(
             ax=ax,
-            color='#27ae60',
-            edgecolor='black',
+            color='black',
+            edgecolor='red',
             linewidth=0.3,
             alpha=1.0,
             label='All Buildings'
@@ -222,3 +222,34 @@ st.download_button(
     file_name=f"flood_plot_{year}.png",
     mime="image/png"
 )
+st.markdown("---")
+st.subheader("👥 Meet the Team")
+
+team_members = [
+    {
+        "name": "Mohamed Jezo",
+        "photo": "https://your-image-host.com/mohamed.jpg",
+        "linkedin": "https://www.linkedin.com/in/mohamed-fadlelseed-98b015209/"
+    }]
+#     # {
+#     #     "name": "Sara Elamin",
+#     #     "photo": "https://your-image-host.com/sara.jpg",
+#     #     "linkedin": "https://www.linkedin.com/in/sara-elamin"
+#     # },
+#     # {
+#     #     "name": "Omar Khalid",
+#     #     "photo": "https://your-image-host.com/omar.jpg",
+#     #     "linkedin": "https://www.linkedin.com/in/omar-khalid"
+#     # },
+#     # {
+#     #     "name": "Lina Bashir",
+#     #     "photo": "https://your-image-host.com/lina.jpg",
+#     #     "linkedin": "https://www.linkedin.com/in/lina-bashir"
+#     # }
+# ]
+
+cols = st.columns(len(team_members))
+for col, member in zip(cols, team_members):
+    col.image(member["photo"], width=120)
+    col.markdown(f"**{member['name']}**")
+    col.markdown(f"[🔗 LinkedIn]({member['linkedin']})")
