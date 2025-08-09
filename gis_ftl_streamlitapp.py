@@ -222,4 +222,3 @@ st.download_button(
     file_name=f"flood_plot_{year}.png",
     mime="image/png"
 )
-------------------------------------------------------
