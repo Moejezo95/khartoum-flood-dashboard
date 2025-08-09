@@ -231,6 +231,10 @@ import pandas as pd
 import folium
 from shapely import wkt
 from streamlit_folium import folium_static
+# --- Load Building Data ---
+buildings_in_khartoum = pd.read_csv("b20.csv")
+buildings_in_khartoum["geometry"] = buildings_in_khartoum["geometry"].apply(wkt.loads)
+buildings_in_khartoum = gpd.GeoDataFrame(buildings_in_khartoum, geometry="geometry", crs="EPSG:4326")
 
 # --- Load Data ---
 # Assume buildings_in_khartoum, khartoum_gdf, and flood_files are preloaded or defined earlier
