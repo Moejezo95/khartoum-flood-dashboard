@@ -227,26 +227,26 @@ st.subheader(" 🧑‍💼🧠 Meet the Team")
 
 team_members = [
     {
-        "name": "Mohamed Jezo",
-        "photo": "https://raw.githubusercontent.com/Moejezo95/khartoum-flood-dashboard/main/assets/Screenshot%202025-06-04%20170219.png",
+        "name": "Mohamed Fadlelseed",
+        "photo": "https://raw.githubusercontent.com/Moejezo95/khartoum-flood-dashboard/main/assets/me.jpg",
         "linkedin": "https://www.linkedin.com/in/mohamed-fadlelseed-98b015209/"
-    }]
-#     # {
-#     #     "name": "Sara Elamin",
-#     #     "photo": "https://your-image-host.com/sara.jpg",
-#     #     "linkedin": "https://www.linkedin.com/in/sara-elamin"
-#     # },
-#     # {
-#     #     "name": "Omar Khalid",
-#     #     "photo": "https://your-image-host.com/omar.jpg",
-#     #     "linkedin": "https://www.linkedin.com/in/omar-khalid"
-#     # },
-#     # {
-#     #     "name": "Lina Bashir",
-#     #     "photo": "https://your-image-host.com/lina.jpg",
-#     #     "linkedin": "https://www.linkedin.com/in/lina-bashir"
-#     # }
-# ]
+    },
+     {
+         "name": "Abreham Ashebir",
+         "photo": "https://raw.githubusercontent.com/Moejezo95/khartoum-flood-dashboard/main/assets/abra.jpg",
+         "linkedin": "https://www.linkedin.com/in/abreham-ashebir/"
+     },
+     {
+         "name": "Mahmoud Abdi",
+         "photo": "https://raw.githubusercontent.com/Moejezo95/khartoum-flood-dashboard/main/assets/abdi.jpg",
+         "linkedin": "https://www.linkedin.com/in/mahamoud-abdi-abdillahi/"
+     },
+     {
+         "name": "Muktar Abdinasir",
+         "photo": "https://raw.githubusercontent.com/Moejezo95/khartoum-flood-dashboard/main/assets/mukh.jpg",
+         "linkedin": "https://www.linkedin.com/in/muktar-abdinasir-salah-2689a3266/"
+     }
+]
 
 cols = st.columns(len(team_members))
 for col, member in zip(cols, team_members):
