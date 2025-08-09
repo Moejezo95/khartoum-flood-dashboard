@@ -223,12 +223,12 @@ st.download_button(
     mime="image/png"
 )
 st.markdown("---")
-st.subheader("👥 Meet the Team")
+st.subheader(" 🧑‍💼🧠 Meet the Team")
 
 team_members = [
     {
         "name": "Mohamed Jezo",
-        "photo": "https://github.com/Moejezo95/khartoum-flood-dashboard/blob/main/assets/Screenshot%202025-06-04%20170219.png",
+        "photo": "https://raw.githubusercontent.com/Moejezo95/khartoum-flood-dashboard/main/assets/Screenshot%202025-06-04%20170219.png",
         "linkedin": "https://www.linkedin.com/in/mohamed-fadlelseed-98b015209/"
     }]
 #     # {
