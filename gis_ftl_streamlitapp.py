@@ -228,7 +228,7 @@ st.subheader("👥 Meet the Team")
 team_members = [
     {
         "name": "Mohamed Jezo",
-        "photo": "https://your-image-host.com/mohamed.jpg",
+        "photo": "https://github.com/Moejezo95/khartoum-flood-dashboard/blob/main/assets/Screenshot%202025-06-04%20170219.png",
         "linkedin": "https://www.linkedin.com/in/mohamed-fadlelseed-98b015209/"
     }]
 #     # {
