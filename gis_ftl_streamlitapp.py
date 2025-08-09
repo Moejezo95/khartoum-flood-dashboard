@@ -253,5 +253,8 @@ for col, member in zip(cols, team_members):
     col.image(member["photo"], width=120)
     col.markdown(f"**{member['name']}**")
     linkedin_icon = "https://cdn-icons-png.flaticon.com/512/174/174857.png"
-    col.markdown(f"[![LinkedIn]({linkedin_icon})]({member['linkedin']})", unsafe_allow_html=True)
+    col.markdown(
+    f'<a href="{member["linkedin"]}" target="_blank"><img src="{linkedin_icon}" width="24" style="margin-top:4px;"></a>',
+    unsafe_allow_html=True
+)
     
