@@ -243,6 +243,21 @@ flood_files = {
     2019: "data/FloodMask_2019.tif",
     2020: "data/FloodMask_2020.tif"
 }
+from rasterstats import zonal_stats
+
+def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
+    flooded_chunks = []
+    buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
+    for i in range(0, len(buildings_gdf), chunk_size):
+        chunk = buildings_gdf.iloc[i:i+chunk_size]
+        try:
+            stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
+            flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
+            flooded_chunks.append(chunk.iloc[flooded_idx])
+        except Exception as e:
+            st.warning(f"⚠️ Zonal stats failed for chunk {i}: {e}")
+    return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
+
 for year, path in flood_files.items():
     if os.path.exists(path):
         try:
