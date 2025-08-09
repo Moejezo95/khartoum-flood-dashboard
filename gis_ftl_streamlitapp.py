@@ -7,248 +7,69 @@ Original file is located at
     https://colab.research.google.com/drive/1eTBl5EMKGm7xUVFf9_pF95wgJnKbmf2X
 """
 
-# import geopandas as gpd
-# import pandas as pd
-# import rasterio
-# from rasterstats import zonal_stats
-# from shapely import wkt
-# import matplotlib.pyplot as plt
-# import streamlit as st
-# import os
-# import numpy as np
-
-# from matplotlib.colors import ListedColormap
-
-# st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
-
-# # --- Upload custom building data ---
-# uploaded_file = st.file_uploader("📤 Upload Your Building CSV", type=["csv"])
-# if uploaded_file:
-#     try:
-#         buildings_df = pd.read_csv(uploaded_file)
-#         st.success("✅ Custom building data loaded.")
-#     except Exception as e:
-#         st.error(f"❌ Failed to read uploaded file: {e}")
-#         st.stop()
-# else:
-#     try:
-#         buildings_df = pd.read_csv("data/buildings.csv", encoding='utf-8')
-#         st.subheader("📍 Sample Building Data")
-#         st.dataframe(buildings_df.head())
-#     except Exception as e:
-#         st.error(f"❌ Error loading buildings CSV: {e}")
-#         st.stop()
-
-# # --- Load Khartoum boundary ---
-# try:
-#     sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
-#     khartoum_gdf = sudan_gdf.copy()
-# except Exception as e:
-#     st.error(f"❌ Error loading Khartoum shapefile: {e}")
-#     st.stop()
-
-# # --- Parse and clean WKT geometry ---
-# if 'geometry' in buildings_df.columns:
-#     try:
-#         buildings_df['geometry'] = buildings_df['geometry'].astype(str).str.strip().str.replace('"', '')
-#         valid_wkt = buildings_df['geometry'].apply(lambda x: isinstance(x, str) and x.startswith(('POINT', 'POLYGON', 'MULTIPOLYGON')))
-#         buildings_df = buildings_df[valid_wkt].copy()
-#         buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-#         buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-#     except Exception as e:
-#         st.error(f"❌ Error parsing WKT geometries: {e}")
-#         st.stop()
-# else:
-#     st.error("❌ 'geometry' column not found in buildings CSV.")
-#     st.stop()
-
-# # --- Clip buildings to Khartoum ---
-# try:
-#     buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
-# except Exception as e:
-#     st.error(f"❌ Error clipping buildings to Khartoum: {e}")
-#     st.stop()
-
-# # --- Efficient zonal stats function ---
-# def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
-#     flooded_chunks = []
-#     buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
-#     for i in range(0, len(buildings_gdf), chunk_size):
-#         chunk = buildings_gdf.iloc[i:i+chunk_size]
-#         try:
-#             stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
-#             flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
-#             flooded_chunks.append(chunk.iloc[flooded_idx])
-#         except Exception as e:
-#             st.warning(f"⚠️ Zonal stats failed for chunk {i}: {e}")
-#     return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
-
-# # --- Load flood masks ---
-# flood_files = {
-#     2018: "data/FloodMask_2018.tif",
-#     2019: "data/FloodMask_2019.tif",
-#     2020: "data/FloodMask_2020.tif"
-# }
-
-# flooded_by_year = {}
-# for year, path in flood_files.items():
-#     if os.path.exists(path):
-#         try:
-#             flooded_by_year[year] = get_flooded_buildings_chunked(path, buildings_in_khartoum)
-#         except Exception as e:
-#             st.warning(f"⚠️ Error processing flood mask for {year}: {e}")
-#     else:
-#         st.warning(f"📁 Flood mask not found for {year}: {path}")
-
-# if not flooded_by_year:
-#     st.warning("⚠️ No flood data available.")
-#     st.stop()
-
-# # --- Raster plotting helper ---
-# def plot_flood_raster(ax, raster_path, scale_factor=0.1):
-#     try:
-#         with rasterio.open(raster_path) as src:
-#             st.write(f"✅ Raster opened: {raster_path}")
-#             new_height = int(src.height * scale_factor)
-#             new_width = int(src.width * scale_factor)
-#             flood_data = src.read(
-#                 1,
-#                 out_shape=(new_height, new_width),
-#                 resampling=rasterio.enums.Resampling.nearest
-#             )
-#             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
-
-#             # Custom colormap: 0 = light gray, 1 = dark blue
-#             cmap = ListedColormap(['lightgray', '#5dade2'])  # medium-light blue
-#             ax.imshow(flood_data, extent=extent, cmap=cmap, vmin=0, vmax=1, alpha=0.6)
-
-#     except Exception as e:
-#         st.warning(f"⚠️ Could not plot flood raster: {e}")
-
-# # --- Streamlit UI ---
-# st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
-# year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
-# flooded = flooded_by_year[year]
-
-# # 📊 Summary Metrics
-# with st.expander("📊 Summary Metrics", expanded=True):
-#     total_buildings = len(buildings_in_khartoum)
-#     flooded_count = len(flooded)
-#     percent_affected = round((flooded_count / total_buildings) * 100, 2)
-#     avg_area = buildings_in_khartoum.geometry.area.mean()
-#     col1, col2, col3 = st.columns(3)
-#     col1.metric("Total Buildings", total_buildings)
-#     col2.metric(f"Flooded in {year}", flooded_count)
-#     col3.metric("Flooded %", f"{percent_affected}%")
-
-# # 📈 Multi-Year Comparison
-# with st.expander("📈 Flood Trend (2018–2020)", expanded=False):
-#     trend_data = pd.DataFrame({
-#         "Year": list(flooded_by_year.keys()),
-#         "Flooded Buildings": [len(flooded_by_year[y]) for y in flooded_by_year]
-#     })
-#     st.bar_chart(trend_data.set_index("Year"))
-
-# # --- View toggle ---
-# view_mode = st.radio("🗺️ Select Building View Mode", ["Polygons", "Centroids"])
-
-# if view_mode == "Centroids":
-#     buildings_to_plot = buildings_in_khartoum.copy()
-#     buildings_to_plot["geometry"] = buildings_to_plot.centroid
-#     flooded_to_plot = flooded.copy()
-#     flooded_to_plot["geometry"] = flooded_to_plot.centroid
-# else:
-#     buildings_to_plot = buildings_in_khartoum
-#     flooded_to_plot = flooded
-
-# # --- Plotting ---
-# try:
-#     fig, ax = plt.subplots(figsize=(10, 8))
-#     fig.patch.set_facecolor('#f9f9f9')
-
-#     if not khartoum_gdf.empty:
-#         khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
-
-#     scale_factor = st.slider("🧭 Raster Resolution", 0.05, 1.0, 0.1)
-
-#     if year in flood_files and os.path.exists(flood_files[year]):
-#         plot_flood_raster(ax, flood_files[year], scale_factor)
-
-#     if not buildings_to_plot.empty:
-#         buildings_to_plot.plot(
-#             ax=ax,
-#             color='#27ae60',
-#             edgecolor='black',
-#             linewidth=0.3,
-#             alpha=1.0,
-#             label='All Buildings'
-#         )
-
-#     if not flooded_to_plot.empty and flooded_to_plot.geometry.notnull().all():
-#         flooded_to_plot.plot(
-#             ax=ax,
-#             color='red',
-#             edgecolor='black',
-#             linewidth=0.3,
-#             label='Flooded Buildings'
-#         )
-
-#     ax.set_title(f"Flood Impact in {year}", fontsize=16)
-#     ax.axis('off')
-#     ax.legend()
-#     st.pyplot(fig)
-
-# except Exception as e:
-#     st.error(f"❌ Plotting failed: {e}")
-
-# # --- Optional download ---
-# st.download_button(
-#     label=f"Download Flooded Buildings ({year})",
-#     data=flooded.to_csv(index=False),
-#     file_name=f"flooded_buildings_{year}.csv",
-#     mime="text/csv"
-# )
-# import io
-
-# # Save figure to buffer
-# buf = io.BytesIO()
-# fig.savefig(buf, format="png", bbox_inches="tight")
-# buf.seek(0)
-
-# # Streamlit download button
-# st.download_button(
-#     label=f"📥 Download Plot ({year}) as PNG",
-#     data=buf,
-#     file_name=f"flood_plot_{year}.png",
-#     mime="image/png"
-# )
-#------------------------------------------------------
-# -*- coding: utf-8 -*-
-import os
-import streamlit as st
 import geopandas as gpd
 import pandas as pd
-import folium
-from shapely import wkt
-from streamlit_folium import folium_static
-# --- Load Building Data ---
-buildings_in_khartoum = pd.read_csv("b20.csv")
-buildings_in_khartoum["geometry"] = buildings_in_khartoum["geometry"].apply(wkt.loads)
-buildings_in_khartoum = gpd.GeoDataFrame(buildings_in_khartoum, geometry="geometry", crs="EPSG:4326")
-
-# --- Load Data ---
-# Assume buildings_in_khartoum, khartoum_gdf, and flood_files are preloaded or defined earlier
-
-# --- Process Flood Masks ---
-flooded_by_year = {}
-# --- Define Flood Mask Paths ---
-flood_files = {
-    2018: "data/FloodMask_2018.tif",
-    2019: "data/FloodMask_2019.tif",
-    2020: "data/FloodMask_2020.tif"
-}
+import rasterio
 from rasterstats import zonal_stats
+from shapely import wkt
+import matplotlib.pyplot as plt
+import streamlit as st
+import os
+import numpy as np
 
+from matplotlib.colors import ListedColormap
+
+st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
+
+# --- Upload custom building data ---
+uploaded_file = st.file_uploader("📤 Upload Your Building CSV", type=["csv"])
+if uploaded_file:
+    try:
+        buildings_df = pd.read_csv(uploaded_file)
+        st.success("✅ Custom building data loaded.")
+    except Exception as e:
+        st.error(f"❌ Failed to read uploaded file: {e}")
+        st.stop()
+else:
+    try:
+        buildings_df = pd.read_csv("data/buildings.csv", encoding='utf-8')
+        st.subheader("📍 Sample Building Data")
+        st.dataframe(buildings_df.head())
+    except Exception as e:
+        st.error(f"❌ Error loading buildings CSV: {e}")
+        st.stop()
+
+# --- Load Khartoum boundary ---
+try:
+    sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
+    khartoum_gdf = sudan_gdf.copy()
+except Exception as e:
+    st.error(f"❌ Error loading Khartoum shapefile: {e}")
+    st.stop()
+
+# --- Parse and clean WKT geometry ---
+if 'geometry' in buildings_df.columns:
+    try:
+        buildings_df['geometry'] = buildings_df['geometry'].astype(str).str.strip().str.replace('"', '')
+        valid_wkt = buildings_df['geometry'].apply(lambda x: isinstance(x, str) and x.startswith(('POINT', 'POLYGON', 'MULTIPOLYGON')))
+        buildings_df = buildings_df[valid_wkt].copy()
+        buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
+        buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
+    except Exception as e:
+        st.error(f"❌ Error parsing WKT geometries: {e}")
+        st.stop()
+else:
+    st.error("❌ 'geometry' column not found in buildings CSV.")
+    st.stop()
+
+# --- Clip buildings to Khartoum ---
+try:
+    buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
+except Exception as e:
+    st.error(f"❌ Error clipping buildings to Khartoum: {e}")
+    st.stop()
+
+# --- Efficient zonal stats function ---
 def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
     flooded_chunks = []
     buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
@@ -262,6 +83,14 @@ def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
             st.warning(f"⚠️ Zonal stats failed for chunk {i}: {e}")
     return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
 
+# --- Load flood masks ---
+flood_files = {
+    2018: "data/FloodMask_2018.tif",
+    2019: "data/FloodMask_2019.tif",
+    2020: "data/FloodMask_2020.tif"
+}
+
+flooded_by_year = {}
 for year, path in flood_files.items():
     if os.path.exists(path):
         try:
@@ -275,80 +104,122 @@ if not flooded_by_year:
     st.warning("⚠️ No flood data available.")
     st.stop()
 
+# --- Raster plotting helper ---
+def plot_flood_raster(ax, raster_path, scale_factor=0.1):
+    try:
+        with rasterio.open(raster_path) as src:
+            st.write(f"✅ Raster opened: {raster_path}")
+            new_height = int(src.height * scale_factor)
+            new_width = int(src.width * scale_factor)
+            flood_data = src.read(
+                1,
+                out_shape=(new_height, new_width),
+                resampling=rasterio.enums.Resampling.nearest
+            )
+            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+
+            # Custom colormap: 0 = light gray, 1 = dark blue
+            cmap = ListedColormap(['lightgray', '#5dade2'])  # medium-light blue
+            ax.imshow(flood_data, extent=extent, cmap=cmap, vmin=0, vmax=1, alpha=0.6)
+
+    except Exception as e:
+        st.warning(f"⚠️ Could not plot flood raster: {e}")
+
 # --- Streamlit UI ---
 st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
 year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
 flooded = flooded_by_year[year]
 
-# --- 📊 Summary Metrics ---
+# 📊 Summary Metrics
 with st.expander("📊 Summary Metrics", expanded=True):
     total_buildings = len(buildings_in_khartoum)
     flooded_count = len(flooded)
     percent_affected = round((flooded_count / total_buildings) * 100, 2)
     avg_area = buildings_in_khartoum.geometry.area.mean()
-
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Buildings", total_buildings)
     col2.metric(f"Flooded in {year}", flooded_count)
-    col3.metric("Flooded %", f"{percent_affected} %")
+    col3.metric("Flooded %", f"{percent_affected}%")
 
-# --- 🗺️ Interactive Folium Map ---
-st.subheader("🗺️ Interactive Map View")
+# 📈 Multi-Year Comparison
+with st.expander("📈 Flood Trend (2018–2020)", expanded=False):
+    trend_data = pd.DataFrame({
+        "Year": list(flooded_by_year.keys()),
+        "Flooded Buildings": [len(flooded_by_year[y]) for y in flooded_by_year]
+    })
+    st.bar_chart(trend_data.set_index("Year"))
 
-# Convert to GeoJSON
-buildings_json = buildings_in_khartoum.to_crs("EPSG:4326").to_json()
-flooded_json = flooded.to_crs("EPSG:4326").to_json()
-khartoum_json = khartoum_gdf.to_crs("EPSG:4326").to_json()
+# --- View toggle ---
+view_mode = st.radio("🗺️ Select Building View Mode", ["Polygons", "Centroids"])
 
-# Define styles
-def style_function(feature):
-    return {
-        'fillColor': '#27ae60',
-        'color': 'black',
-        'weight': 0.5,
-        'fillOpacity': 0.6
-    }
+if view_mode == "Centroids":
+    buildings_to_plot = buildings_in_khartoum.copy()
+    buildings_to_plot["geometry"] = buildings_to_plot.centroid
+    flooded_to_plot = flooded.copy()
+    flooded_to_plot["geometry"] = flooded_to_plot.centroid
+else:
+    buildings_to_plot = buildings_in_khartoum
+    flooded_to_plot = flooded
 
-def flooded_style(feature):
-    return {
-        'fillColor': 'red',
-        'color': 'black',
-        'weight': 0.5,
-        'fillOpacity': 0.8
-    }
+# --- Plotting ---
+try:
+    fig, ax = plt.subplots(figsize=(10, 8))
+    fig.patch.set_facecolor('#f9f9f9')
 
-# Create map
-center = [khartoum_gdf.geometry.centroid.y.mean(), khartoum_gdf.geometry.centroid.x.mean()]
-m = folium.Map(location=center, zoom_start=11, tiles='CartoDB positron')
+    if not khartoum_gdf.empty:
+        khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
 
-# Add layers
-folium.GeoJson(
-    khartoum_json,
-    name="Khartoum Boundary",
-    style_function=lambda x: {"color": "gray", "weight": 1, "fillOpacity": 0}
-).add_to(m)
+    scale_factor = st.slider("🧭 Raster Resolution", 0.05, 1.0, 0.1)
 
-folium.GeoJson(
-    buildings_json,
-    name="All Buildings",
-    style_function=style_function,
-    tooltip=folium.GeoJsonTooltip(fields=["id"], aliases=["Building ID"])
-).add_to(m)
+    if year in flood_files and os.path.exists(flood_files[year]):
+        plot_flood_raster(ax, flood_files[year], scale_factor)
 
-folium.GeoJson(
-    flooded_json,
-    name="Flooded Buildings",
-    style_function=flooded_style,
-    tooltip=folium.GeoJsonTooltip(fields=["id"], aliases=["Flooded ID"])
-).add_to(m)
+    if not buildings_to_plot.empty:
+        buildings_to_plot.plot(
+            ax=ax,
+            color='#27ae60',
+            edgecolor='black',
+            linewidth=0.3,
+            alpha=1.0,
+            label='All Buildings'
+        )
 
-folium.LayerControl().add_to(m)
-folium_static(m, width=1000, height=600)
+    if not flooded_to_plot.empty and flooded_to_plot.geometry.notnull().all():
+        flooded_to_plot.plot(
+            ax=ax,
+            color='red',
+            edgecolor='black',
+            linewidth=0.3,
+            label='Flooded Buildings'
+        )
 
-# --- 📥 Download Button ---
+    ax.set_title(f"Flood Impact in {year}", fontsize=16)
+    ax.axis('off')
+    ax.legend()
+    st.pyplot(fig)
+
+except Exception as e:
+    st.error(f"❌ Plotting failed: {e}")
+
+# --- Optional download ---
 st.download_button(
     label=f"Download Flooded Buildings ({year})",
     data=flooded.to_csv(index=False),
     file_name=f"flooded_buildings_{year}.csv",
     mime="text/csv"
 )
+import io
+
+# Save figure to buffer
+buf = io.BytesIO()
+fig.savefig(buf, format="png", bbox_inches="tight")
+buf.seek(0)
+
+# Streamlit download button
+st.download_button(
+    label=f"📥 Download Plot ({year}) as PNG",
+    data=buf,
+    file_name=f"flood_plot_{year}.png",
+    mime="image/png"
+)
+------------------------------------------------------
