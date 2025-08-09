@@ -223,88 +223,19 @@ Original file is located at
 #     mime="image/png"
 # )
 #------------------------------------------------------
+# -*- coding: utf-8 -*-
+import os
+import streamlit as st
 import geopandas as gpd
 import pandas as pd
-import rasterio
-from rasterstats import zonal_stats
-from shapely import wkt
-import streamlit as st
-import os
-import numpy as np
 import folium
-from streamlit_folium import st_folium
+from shapely import wkt
+from streamlit_folium import folium_static
 
-st.set_page_config(page_title="Khartoum Flood Dashboard", layout="wide")
+# --- Load Data ---
+# Assume buildings_in_khartoum, khartoum_gdf, and flood_files are preloaded or defined earlier
 
-# --- Upload custom building data ---
-uploaded_file = st.file_uploader("📤 Upload Your Building CSV", type=["csv"])
-if uploaded_file:
-    try:
-        buildings_df = pd.read_csv(uploaded_file)
-        st.success("✅ Custom building data loaded.")
-    except Exception as e:
-        st.error(f"❌ Failed to read uploaded file: {e}")
-        st.stop()
-else:
-    try:
-        buildings_df = pd.read_csv("data/buildings.csv", encoding='utf-8')
-        st.subheader("📍 Sample Building Data")
-        st.dataframe(buildings_df.head())
-    except Exception as e:
-        st.error(f"❌ Error loading buildings CSV: {e}")
-        st.stop()
-
-# --- Load Khartoum boundary ---
-try:
-    sudan_gdf = gpd.read_file("data/Khartoum.shp").to_crs("EPSG:4326")
-    khartoum_gdf = sudan_gdf.copy()
-except Exception as e:
-    st.error(f"❌ Error loading Khartoum shapefile: {e}")
-    st.stop()
-
-# --- Parse and clean WKT geometry ---
-if 'geometry' in buildings_df.columns:
-    try:
-        buildings_df['geometry'] = buildings_df['geometry'].astype(str).str.strip().str.replace('"', '')
-        valid_wkt = buildings_df['geometry'].apply(lambda x: isinstance(x, str) and x.startswith(('POINT', 'POLYGON', 'MULTIPOLYGON')))
-        buildings_df = buildings_df[valid_wkt].copy()
-        buildings_df['geometry'] = buildings_df['geometry'].apply(wkt.loads)
-        buildings_gdf = gpd.GeoDataFrame(buildings_df, geometry='geometry', crs='EPSG:4326')
-    except Exception as e:
-        st.error(f"❌ Error parsing WKT geometries: {e}")
-        st.stop()
-else:
-    st.error("❌ 'geometry' column not found in buildings CSV.")
-    st.stop()
-
-# --- Clip buildings to Khartoum ---
-try:
-    buildings_in_khartoum = gpd.sjoin(buildings_gdf, khartoum_gdf, how='inner', predicate='intersects')
-except Exception as e:
-    st.error(f"❌ Error clipping buildings to Khartoum: {e}")
-    st.stop()
-
-# --- Efficient zonal stats function ---
-def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
-    flooded_chunks = []
-    buildings_gdf = buildings_gdf.to_crs("EPSG:4326")
-    for i in range(0, len(buildings_gdf), chunk_size):
-        chunk = buildings_gdf.iloc[i:i+chunk_size]
-        try:
-            stats = zonal_stats(chunk, flood_path, stats=["max"], nodata=0)
-            flooded_idx = [i for i, s in enumerate(stats) if s and s.get("max") == 1]
-            flooded_chunks.append(chunk.iloc[flooded_idx])
-        except Exception as e:
-            st.warning(f"⚠️ Zonal stats failed for chunk {i}: {e}")
-    return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
-
-# --- Load flood masks ---
-flood_files = {
-    2018: "data/FloodMask_2018.tif",
-    2019: "data/FloodMask_2019.tif",
-    2020: "data/FloodMask_2020.tif"
-}
-
+# --- Process Flood Masks ---
 flooded_by_year = {}
 for year, path in flood_files.items():
     if os.path.exists(path):
@@ -324,53 +255,72 @@ st.title("🌊 Flood Impact on Buildings in Khartoum (2018–2020)")
 year = st.selectbox("Select Year", sorted(flooded_by_year.keys()))
 flooded = flooded_by_year[year]
 
-# 📊 Summary Metrics
+# --- 📊 Summary Metrics ---
 with st.expander("📊 Summary Metrics", expanded=True):
     total_buildings = len(buildings_in_khartoum)
     flooded_count = len(flooded)
     percent_affected = round((flooded_count / total_buildings) * 100, 2)
     avg_area = buildings_in_khartoum.geometry.area.mean()
+
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Buildings", total_buildings)
     col2.metric(f"Flooded in {year}", flooded_count)
-    col3.metric("Flooded %", f"{percent_affected}%")
+    col3.metric("Flooded %", f"{percent_affected} %")
 
-# --- Folium Map ---
-st.subheader("🖱️ Interactive Map: Click Polygon to Zoom and Highlight")
+# --- 🗺️ Interactive Folium Map ---
+st.subheader("🗺️ Interactive Map View")
 
-# Create base map
-center = [khartoum_gdf.geometry.centroid.y.mean(), khartoum_gdf.geometry.centroid.x.mean()]
-m = folium.Map(location=center, zoom_start=11, tiles="CartoDB positron")
+# Convert to GeoJSON
+buildings_json = buildings_in_khartoum.to_crs("EPSG:4326").to_json()
+flooded_json = flooded.to_crs("EPSG:4326").to_json()
+khartoum_json = khartoum_gdf.to_crs("EPSG:4326").to_json()
 
-# Add Khartoum boundary
-folium.GeoJson(khartoum_gdf.geometry,
-               name="Khartoum Boundary",
-               style_function=lambda x: {"color": "gray", "weight": 1, "fillOpacity": 0}
-).add_to(m)
-
-# Add buildings with conditional styling
+# Define styles
 def style_function(feature):
-    geom = wkt.loads(feature["geometry"])
-    is_flooded = flooded.geometry.apply(lambda g: g.equals(geom)).any()
     return {
-        "color": "red" if is_flooded else "black",
-        "weight": 1,
-        "fillOpacity": 0.7
+        'fillColor': '#27ae60',
+        'color': 'black',
+        'weight': 0.5,
+        'fillOpacity': 0.6
     }
 
-buildings_json = buildings_in_khartoum.to_crs("EPSG:4326").to_json()
+def flooded_style(feature):
+    return {
+        'fillColor': 'red',
+        'color': 'black',
+        'weight': 0.5,
+        'fillOpacity': 0.8
+    }
+
+# Create map
+center = [khartoum_gdf.geometry.centroid.y.mean(), khartoum_gdf.geometry.centroid.x.mean()]
+m = folium.Map(location=center, zoom_start=11, tiles='CartoDB positron')
+
+# Add layers
 folium.GeoJson(
-    buildings_json,
-    name="Buildings",
-    style_function=style_function,
-    highlight_function=lambda x: {"weight": 3, "color": "yellow"},
-    tooltip=folium.GeoJsonTooltip(fields=["id"], aliases=["Building ID"]),
+    khartoum_json,
+    name="Khartoum Boundary",
+    style_function=lambda x: {"color": "gray", "weight": 1, "fillOpacity": 0}
 ).add_to(m)
 
-# Display map and capture interaction
-map_data = st_folium(m, width=1000, height=600)
+folium.GeoJson(
+    buildings_json,
+    name="All Buildings",
+    style_function=style_function,
+    tooltip=folium.GeoJsonTooltip(fields=["id"], aliases=["Building ID"])
+).add_to(m)
 
-# Optional download
+folium.GeoJson(
+    flooded_json,
+    name="Flooded Buildings",
+    style_function=flooded_style,
+    tooltip=folium.GeoJsonTooltip(fields=["id"], aliases=["Flooded ID"])
+).add_to(m)
+
+folium.LayerControl().add_to(m)
+folium_static(m, width=1000, height=600)
+
+# --- 📥 Download Button ---
 st.download_button(
     label=f"Download Flooded Buildings ({year})",
     data=flooded.to_csv(index=False),
