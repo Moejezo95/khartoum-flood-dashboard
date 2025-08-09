@@ -237,6 +237,12 @@ from streamlit_folium import folium_static
 
 # --- Process Flood Masks ---
 flooded_by_year = {}
+# --- Define Flood Mask Paths ---
+flood_files = {
+    2018: "data/FloodMask_2018.tif",
+    2019: "data/FloodMask_2019.tif",
+    2020: "data/FloodMask_2020.tif"
+}
 for year, path in flood_files.items():
     if os.path.exists(path):
         try:
