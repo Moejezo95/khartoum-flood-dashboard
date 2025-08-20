@@ -154,7 +154,7 @@ try:
     fig.patch.set_facecolor('none')
 
     if not khartoum_gdf.empty:
-        khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='grey', linewidth=0.5)
+        khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='none', linewidth=0.5)
 
     scale_factor = st.slider("🧭 Raster Resolution", 0.05, 1.0, 0.1)
 
@@ -167,7 +167,7 @@ try:
             color='none',
             edgecolor='green',
             linewidth=0.05,
-            
+            , alpha=0.6
             label='All Buildings'
         )
 
