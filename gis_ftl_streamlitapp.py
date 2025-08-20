@@ -108,7 +108,7 @@ def plot_flood_raster(ax, raster_path, scale_factor=0.1):
                 resampling=rasterio.enums.Resampling.nearest
             )
             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
-            cmap = ListedColormap(['none', 'blue'])
+            cmap = ListedColormap(['none', '#0b3d91'])  # dark blue for flood
             ax.imshow(flood_data, extent=extent, cmap=cmap, vmin=0, vmax=1, alpha=0.6)
     except Exception as e:
         st.warning(f"⚠️ Could not plot flood raster: {e}")
@@ -151,7 +151,7 @@ else:
 # --- Plotting ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
-    fig.patch.set_facecolor('blue')
+    fig.patch.set_facecolor('none')
 
     if not khartoum_gdf.empty:
         khartoum_gdf.plot(ax=ax, edgecolor='black', facecolor='grey', linewidth=0.5)
