@@ -84,11 +84,7 @@ def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
     return pd.concat(flooded_chunks).to_crs("EPSG:4326") if flooded_chunks else gpd.GeoDataFrame(columns=buildings_gdf.columns)
 
 # --- Load flood masks ---
-flood_files = {
-    2018: "data/FloodMask_2018.tif",
-    2019: "data/FloodMask_2019.tif",
-    2020: "data/FloodMask_2020.tif"
-}
+flood_files = {2020: "data/FloodMask_2020-08-30_MNDWI.tif"}
 
 flooded_by_year = {}
 for year, path in flood_files.items():
