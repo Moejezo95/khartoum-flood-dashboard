@@ -164,7 +164,7 @@ try:
     if not buildings_to_plot.empty:
         buildings_to_plot.plot(
             ax=ax,
-            color='none',
+            color='black',
             edgecolor='grey',
             linewidth=0.05,
             alpha=1,
