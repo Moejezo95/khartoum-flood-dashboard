@@ -407,7 +407,7 @@ else:
 # --- Plotting ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
-    fig.patch.set_facecolor('#f9f9f9')
+    fig.patch.set_facecolor('transparent')
 
     if not khartoum_gdf.empty:
         khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
@@ -420,9 +420,9 @@ try:
     if not buildings_to_plot.empty:
         buildings_to_plot.plot(
             ax=ax,
-            color='white',
-            edgecolor='red',
-            linewidth=0.1,
+            color='transparent',
+            edgecolor='black',
+            linewidth=0.05,
             alpha=1.0,
             label='All Buildings'
         )
@@ -430,9 +430,9 @@ try:
     if not flooded_to_plot.empty and flooded_to_plot.geometry.notnull().all():
         flooded_to_plot.plot(
             ax=ax,
-            color='yellow',
-            edgecolor='green',
-            linewidth=0.1,
+            color='transparent',
+            edgecolor='red',
+            linewidth=0.05,
             label='Flooded Buildings'
         )
 
