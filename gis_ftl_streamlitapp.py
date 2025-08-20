@@ -407,7 +407,7 @@ else:
 # --- Plotting ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
-    fig.patch.set_facecolor('transparent')
+    fig.patch.set_facecolor('none')
 
     if not khartoum_gdf.empty:
         khartoum_gdf.plot(ax=ax, edgecolor='gray', facecolor='none', linewidth=1)
