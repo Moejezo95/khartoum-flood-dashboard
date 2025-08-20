@@ -165,8 +165,8 @@ try:
         buildings_to_plot.plot(
             ax=ax,
             color='black',
-            edgecolor='grey',
-            linewidth=0.05,
+            edgecolor='black',
+            linewidth=0.5,
             alpha=1,
             label='All Buildings'
         )
