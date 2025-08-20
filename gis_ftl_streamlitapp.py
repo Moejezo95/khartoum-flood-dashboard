@@ -154,7 +154,7 @@ try:
     fig.patch.set_facecolor('none')
 
     if not khartoum_gdf.empty:
-        khartoum_gdf.plot(ax=ax, edgecolor='dark red', facecolor='none', linewidth=1)
+        khartoum_gdf.plot(ax=ax, edgecolor='red', facecolor='none', linewidth=1)
 
     scale_factor = st.slider("🧭 Raster Resolution", 0.05, 1.0, 0.1)
 
