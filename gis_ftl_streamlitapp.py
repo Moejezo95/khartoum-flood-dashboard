@@ -109,7 +109,7 @@ def plot_flood_raster(ax, raster_path, scale_factor=0.1):
             )
             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
             cmap = ListedColormap(['none', 'blue'])  # dark blue for flood
-            ax.imshow(flood_data, extent=extent, cmap=cmap, vmin=0, vmax=1, alpha=0.6)
+            ax.imshow(flood_data, extent=extent, cmap=cmap, vmin=0, vmax=1, alpha=0.9)
     except Exception as e:
         st.warning(f"⚠️ Could not plot flood raster: {e}")
 
@@ -167,7 +167,7 @@ try:
             color='none',
             edgecolor='grey',
             linewidth=0.05,
-            alpha=0.6,
+            alpha=1,
             label='All Buildings'
         )
 
