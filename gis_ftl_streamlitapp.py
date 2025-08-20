@@ -420,9 +420,9 @@ try:
     if not buildings_to_plot.empty:
         buildings_to_plot.plot(
             ax=ax,
-            color='black',
+            color='white',
             edgecolor='red',
-            linewidth=0.3,
+            linewidth=0.1,
             alpha=1.0,
             label='All Buildings'
         )
@@ -430,9 +430,9 @@ try:
     if not flooded_to_plot.empty and flooded_to_plot.geometry.notnull().all():
         flooded_to_plot.plot(
             ax=ax,
-            color='red',
-            edgecolor='black',
-            linewidth=0.3,
+            color='yellow',
+            edgecolor='green',
+            linewidth=0.1,
             label='Flooded Buildings'
         )
 
