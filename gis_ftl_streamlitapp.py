@@ -167,7 +167,7 @@ try:
             color='none',
             edgecolor='green',
             linewidth=0.05,
-            , alpha=0.6
+            alpha=0.6,
             label='All Buildings'
         )
 
