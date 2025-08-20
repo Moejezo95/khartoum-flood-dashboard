@@ -164,10 +164,10 @@ try:
     if not buildings_to_plot.empty:
         buildings_to_plot.plot(
             ax=ax,
-            color='black',
-            edgecolor='black',
+            color='none',
+            edgecolor='#000000',
             linewidth=0.1,
-            alpha=1,
+            alpha=0.6,
             label='All Buildings'
         )
 
