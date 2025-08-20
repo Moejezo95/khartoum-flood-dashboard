@@ -151,7 +151,7 @@ else:
 # --- Plotting ---
 try:
     fig, ax = plt.subplots(figsize=(10, 8))
-    fig.patch.set_facecolor('none')
+    fig.patch.set_facecolor('grey')
 
     if not khartoum_gdf.empty:
         khartoum_gdf.plot(ax=ax, edgecolor='red', facecolor='none', linewidth=1)
