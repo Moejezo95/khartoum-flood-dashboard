@@ -166,7 +166,7 @@ try:
             ax=ax,
             color='black',
             edgecolor='black',
-            linewidth=0.5,
+            linewidth=0.1,
             alpha=1,
             label='All Buildings'
         )
