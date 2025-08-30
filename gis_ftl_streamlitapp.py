@@ -77,7 +77,7 @@ def get_flooded_buildings_chunked(flood_path, buildings_gdf, chunk_size=50000):
 
 # --- Load flood masks by date ---
 flood_files = {
-    "2020-08-30": "data/FloodMask_2020-08-30_MNDWI.tif"}
+    "2020-08-30": "data/FloodMask_2020-09-10.tif"}
 #     "2020-09-15": "data/FloodMask_2020-09-15_MNDWI.tif"
 # }
 
